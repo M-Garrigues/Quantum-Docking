@@ -2,7 +2,7 @@
 
 from typing import Final
 
-from mol.features import FeatureFamily
+# from src.mol_processing.features import FeatureFamily
 
 """ Interactions configuration """
 FLEXIBILITY_CONSTANT_TAU: Final[float] = 0
@@ -18,9 +18,9 @@ SELECTED_FEATURES: Final[dict] = {
     "LumpedHydrophobe": {"abbreviation": "h", "attractors": ["h"]},
 }
 
-SELECTED_FEATURE_FAMILIES: Final[list[FeatureFamily]] = [
-    FeatureFamily(name, *SELECTED_FEATURES[name]) for name in SELECTED_FEATURES.keys()
-]
+# SELECTED_FEATURE_FAMILIES: Final[list[FeatureFamily]] = [
+#     FeatureFamily(name, *SELECTED_FEATURES[name]) for name in SELECTED_FEATURES.keys()
+# ]
 
 #     FeatureFamily("Donor", abbreviation="d", attractors=["a"]),
 #     FeatureFamily("Acceptor", abbreviation="a", attractors=["d"]),
