@@ -1,3 +1,5 @@
+matplotlib
+networkx
 numpy
 pulser
 rdkit
