@@ -1,41 +1,107 @@
-import lorem
+import matplotlib.pyplot as plt
+import networkx as nx
+import numpy as np
+from rdkit import Chem
+from rdkit.Chem import MACCSkeys
 
 
-def generate_lorem_ipsum_paragraphs(num_paragraphs, sentences_per_paragraph):
-    """Generate lorem ipsum text with the specified number
-    of paragraphs and sentences per paragraph.
+def extract_pharmacophore_from_pdb(pdb_file: str) -> MACCSkeys:
+    """Extracts the 2D pharmacophore from a PDB file and displays the molecule.
 
     Args:
-        num_paragraphs (int): The number of paragraphs to generate.
-        sentences_per_paragraph (int): The number of sentences in each paragraph.
+        pdb_file (str): The path to the PDB file.
 
     Returns:
-        list: A list of generated lorem ipsum paragraphs.
+        MACCSkeys: The 2D pharmacophore representation.
     """
-    lorem_paragraphs = []
-    for _ in range(num_paragraphs):
-        paragraph = [lorem.sentence() for _ in range(sentences_per_paragraph)]
-        lorem_paragraphs.append(" ".join(paragraph))
-    return lorem_paragraphs
+    mol = Chem.MolFromPDBFile(pdb_file)
+
+    if mol is None:
+        print("Failed to load molecule from PDB file.")
+        return
+
+    pharmacophore = MACCSkeys.GenMACCSKeys(mol)
+    print(pharmacophore)
+    # img = Draw.Pharm3DToImage(pharmacophore)
+    # img.show()
+
+    return pharmacophore
 
 
-def print_lorem_ipsum_paragraphs(lorem_paragraphs):
-    """Print generated lorem ipsum paragraphs to the console.
+def extract_pairwise_matrix(pharmacophore: MACCSkeys) -> np.ndarray:
+    """Extracts the labeled pairwise matrix from a 2D pharmacophore representation.
 
     Args:
-        lorem_paragraphs (list): A list of lorem ipsum paragraphs to print.
+        pharmacophore (MACCSkeys): The 2D pharmacophore representation.
+
+    Returns:
+        np.ndarray: The labeled pairwise matrix.
     """
-    for index, paragraph in enumerate(lorem_paragraphs, start=1):
-        print(f"Paragraph {index}:\n{paragraph}\n")
+    matrix = np.zeros((pharmacophore.GetNumBits(), pharmacophore.GetNumBits()))
+
+    for i in range(pharmacophore.GetNumBits()):
+        for j in range(i, pharmacophore.GetNumBits()):
+            if i != j:
+                matrix[i, j] = matrix[j, i] = pharmacophore.GetBit(i) & pharmacophore.GetBit(j)
+
+    return matrix
 
 
-def main():
-    num_paragraphs = 3
-    sentences_per_paragraph = 4
+def construct_binding_interaction_graph(
+    matrix_ligand: np.ndarray,
+    matrix_receptor: np.ndarray,
+) -> nx.Graph:
+    """Constructs a binding interaction graph between a ligand and receptor based on their matrices.
 
-    lorem_paragraphs = generate_lorem_ipsum_paragraphs(num_paragraphs, sentences_per_paragraph)
-    print_lorem_ipsum_paragraphs(lorem_paragraphs)
+    Args:
+        matrix_ligand (np.ndarray): The labeled pairwise matrix for the ligand.
+        matrix_receptor (np.ndarray): The labeled pairwise matrix for the receptor.
+
+    Returns:
+        nx.Graph: The binding interaction graph.
+    """
+    binding_matrix = matrix_ligand.dot(matrix_receptor.T)
+    binding_graph = nx.Graph(binding_matrix)
+
+    return binding_graph
+
+
+def display_interaction_graph(binding_graph: nx.Graph):
+    """Displays the binding interaction graph using Matplotlib.
+
+    Args:
+        binding_graph (nx.Graph): The binding interaction graph.
+    """
+    pos = nx.spring_layout(binding_graph)  # Position nodes using the spring layout
+
+    plt.figure(figsize=(8, 8))
+    nx.draw(
+        binding_graph,
+        pos,
+        with_labels=True,
+        node_size=200,
+        node_color="lightblue",
+        font_size=10,
+    )
+    edge_labels = {(u, v): d["weight"] for u, v, d in binding_graph.edges(data=True)}
+    nx.draw_networkx_edge_labels(binding_graph, pos, edge_labels=edge_labels)
+
+    plt.title("Binding Interaction Graph")
+    plt.axis("off")
+    plt.show()
 
 
 if __name__ == "__main__":
-    main()
+    pdb_file = "./data/receptors/1AO2.pdb"  # Replace with the path to your PDB file
+    receptor_pharmacophore = extract_pharmacophore_from_pdb(pdb_file)
+    receptor_matrix = extract_pairwise_matrix(receptor_pharmacophore)
+
+    pdb_file = "./data/ligands/H2O2.pdb"  # Replace with the path to your PDB file
+    ligand_pharmacophore = extract_pharmacophore_from_pdb(pdb_file)
+    ligand_matrix = extract_pairwise_matrix(ligand_pharmacophore)
+
+    # Construct the binding interaction graph
+    binding_graph = construct_binding_interaction_graph(ligand_matrix, receptor_matrix)
+
+    # You can analyze or visualize the binding interaction graph as needed
+    display_interaction_graph(binding_graph)
