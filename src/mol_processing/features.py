@@ -3,7 +3,7 @@ from collections import Counter
 from attr import dataclass
 from rdkit.Chem.rdMolChemicalFeatures import MolChemicalFeature
 
-from src.config import SELECTED_FEATURES
+from src.config.general import SELECTED_FEATURES
 
 
 @dataclass(init=True)
@@ -41,10 +41,16 @@ class Feature:
         return self.__position
 
     def __hash__(self):
-        return hash((self.__name, self.__position))
+        return hash((self.__name, self.__position, self.__molecule_id))
 
     def __eq__(self, other):
         return (self.__name, self.__position) == (other.name, other.position)
+
+    def __lt__(self, other):
+        return str(self) < str(other)
+
+    def __gt__(self, other):
+        return str(self) > str(other)
 
     def __str__(self):
         return self.name if self.name else "Undefined yet"

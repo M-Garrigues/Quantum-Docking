@@ -1,7 +1,7 @@
 from rdkit.Chem import ChemicalFeatures, Mol
 
-from src.config.general import SELECTED_FEATURES
-from src.mol_processing.features import Feature
+from config.general import SELECTED_FEATURES
+from src.mol.features import Feature
 
 
 def get_features(mol: Mol, mol_id: str) -> list[Feature]:
