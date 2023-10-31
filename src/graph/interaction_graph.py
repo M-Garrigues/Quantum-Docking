@@ -1,3 +1,5 @@
+"""Module containing all the functions needed to build a binding interaction graph."""
+
 from dataclasses import dataclass
 
 import networkx as nx
@@ -11,6 +13,8 @@ from src.utils.distances import euclidean_distance
 
 @dataclass
 class InteractionNode:
+    """Clarity class to have a node's informations and its name calculated."""
+
     L_feature: Feature
     R_feature: Feature
     weight: float
@@ -82,6 +86,17 @@ def find_possible_edges(
     L_feature_pair: tuple[Feature, Feature],
     R_feature_pair: tuple[Feature, Feature],
 ) -> list[tuple[tuple[Feature, Feature], tuple[Feature, Feature]]]:
+    """For a given pair of edges in the Ligand and the Receptor, returns the physically possible
+       edges that will be integrated in the binding interaction graph.
+
+    Args:
+        L_feature_pair (tuple[Feature, Feature]): Ligand feature pair.
+        R_feature_pair (tuple[Feature, Feature]): Receptor feature pair.
+
+    Returns:
+        list[tuple[tuple[Feature, Feature], tuple[Feature, Feature]]]:
+            A list containing at max two possible edges of the interaction graph.
+    """
     possible_edges: list[tuple[tuple[Feature, Feature], tuple[Feature, Feature]]] = []
 
     edge_interactions = (
@@ -109,6 +124,16 @@ def build_nx_weighted_graph(
     edges: set[tuple[InteractionNode, InteractionNode]],
     nodes: set[InteractionNode],
 ) -> nx.Graph:
+    """Builds a networkx graph object from a set of nodes and edges.
+
+    Args:
+        edges (set[tuple[InteractionNode, InteractionNode]]):
+            Set of edges, tuple of InteractionNode objects.
+        nodes (set[InteractionNode]): Set of InteractionNode objects.
+
+    Returns:
+        nx.Graph: Created networkx graph object.
+    """
     G = nx.Graph()
 
     # Add nodes to the graph with their weights
@@ -126,6 +151,16 @@ def build_binding_interaction_graph(
     L_distance_matrix: OrderedTupleDict[float],
     R_distance_matrix: OrderedTupleDict[float],
 ) -> nx.Graph:
+    """Given the distance matrixes for two molecules and their families,
+       build a full binding interaction graph.
+
+    Args:
+        L_distance_matrix (OrderedTupleDict[float]): Ligand's distance matrix.
+        R_distance_matrix (OrderedTupleDict[float]): Receptor's distance matrix.
+
+    Returns:
+        nx.Graph: Full binding graph object.
+    """
     possible_edges: list[
         tuple[tuple[Feature, Feature], tuple[Feature, Feature]]
     ] = []  # list[((Feature_L_a, Feature_R_x), (Feature_L_b, Feature_R_y))]
@@ -136,9 +171,6 @@ def build_binding_interaction_graph(
                 continue
 
             possible_edges += find_possible_edges(L_pair, R_pair)  # type: ignore
-
-    print(possible_edges)
-    print(len(possible_edges))
 
     nodes: set[InteractionNode] = set()
     edges: set[tuple[InteractionNode, InteractionNode]] = set()

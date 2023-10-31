@@ -1,3 +1,5 @@
+"""Configuration module for the potential function between different features."""
+
 # Knowledge-based pharmacophore potential.
 # Data is derived from the pdBbind dataset from 2015 [79–81].
 

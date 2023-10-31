@@ -1,3 +1,5 @@
+"""Module to deal with the Rdkit molecules and their features."""
+
 from rdkit.Chem import ChemicalFeatures, Mol
 
 from src.config.general import SELECTED_FEATURES

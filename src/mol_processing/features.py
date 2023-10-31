@@ -1,3 +1,5 @@
+"""Module to handle the features, with dedicated objects."""
+
 from collections import Counter
 
 from attr import dataclass
@@ -8,8 +10,11 @@ from src.config.general import SELECTED_FEATURES
 
 @dataclass(init=True)
 class FeatureFamily:
+    """Dataclass for the feature families, for clarity purposes."""
+
     @classmethod
     def from_family_name(cls, name: str):
+        """Return the feature family object from the name."""
         return cls(name, **SELECTED_FEATURES[name])  # type: ignore
 
     name: str
@@ -18,6 +23,8 @@ class FeatureFamily:
 
 
 class Feature:
+    """Concentrates a feature's informations. Can be used directly as index in dictionnaries."""
+
     def __init__(self, rd_feature: MolChemicalFeature, molecule_id: str) -> None:
         self.__name: str | None = None
         self.__family: FeatureFamily = FeatureFamily.from_family_name(rd_feature.GetFamily())
