@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.5.0
     hooks:
       - id: check-yaml
       - id: name-tests-test
@@ -10,19 +10,19 @@ repos:
       - id: check-added-large-files
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.3.1
+    rev: v3.15.0
     hooks:
       - id: pyupgrade
-        args: [--py39-plus]
+        args: [--py310-plus]
 
   - repo: https://github.com/asottile/add-trailing-comma
-    rev: v2.4.0
+    rev: v3.1.0
     hooks:
       - id: add-trailing-comma
         args: [--py36-plus]
 
   - repo: https://github.com/hadialqattan/pycln
-    rev: v2.1.3
+    rev: v2.3.0
     hooks:
       - id: pycln
         args: [--config=pyproject.toml]
@@ -35,30 +35,30 @@ repos:
         args: [--settings-path=pyproject.toml]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.5.0
     hooks:
     -   id: detect-private-key
 
   - repo: https://github.com/psf/black
-    rev: 23.3.0
+    rev: 23.10.1
     hooks:
       - id: black
         args: [--config=pyproject.toml]
 
   - repo: https://github.com/asottile/blacken-docs
-    rev: 1.13.0
+    rev: 1.16.0
     hooks:
       - id: blacken-docs
 
   - repo: https://github.com/pycqa/pylint
-    rev: v3.0.0a6
+    rev: v3.0.1
     hooks:
     -   id: pylint
         args:
         - --rcfile=./config/.pylintrc
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.2.0
+    rev: v1.6.1
     hooks:
       - id: mypy
         additional_dependencies: [types-all]
