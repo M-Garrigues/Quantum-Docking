@@ -1,4 +1,5 @@
 src/long
+notebooks/test.ipynb
 
 #mypy
 .mypy_cache
