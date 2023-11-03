@@ -15,12 +15,17 @@ def draw_interaction_graph(G: nx.Graph) -> None:
     # Specify the positions of nodes (you can use different layouts)
     pos = nx.spring_layout(G, scale=10, iterations=10, k=1, seed=seed)
 
+    if any("weight" in G.nodes[node] for node in G.nodes):
+        nodes_size = [G.nodes[n]["weight"] * 100 for n in G.nodes()]
+    else:
+        nodes_size = [100 for _ in G.nodes()]
+
     # Draw the graph
     nx.draw(
         G,
         pos,
         with_labels=True,
-        node_size=[G.nodes[n]["weight"] * 100 for n in G.nodes()],
+        node_size=nodes_size,
         node_color="blue",
         font_size=7,
     )
