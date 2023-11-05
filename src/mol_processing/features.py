@@ -1,8 +1,8 @@
 """Module to handle the features, with dedicated objects."""
 
 from collections import Counter
+from dataclasses import dataclass
 
-from attr import dataclass
 from rdkit.Chem.rdMolChemicalFeatures import MolChemicalFeature
 
 from config.general import SELECTED_FEATURES
@@ -85,20 +85,9 @@ def name_features_by_count(features: list[Feature], is_ligand: bool) -> None:
         feature.name = abbreviation + str(ordered_id)
 
 
-# def find_nearest_feature(
-#     feature: Feature, distance_matrix: OrderedTupleDict
-# ) -> tuple[Feature, Feature]:
-#     # Initialize the minimum value to positive infinity
-#     min_distance = float("inf")
-#     min_key = None
+def find_feature_by_name(name: str, features_list: list[Feature]) -> Feature | None:
+    for feat in features_list:
+        if name == feat.name:
+            return feat
 
-#     # Iterate through the dictionary items
-#     for key, distance in distance_matrix.items():
-#         # Check if the feature is present in the key
-#         if feature in key:
-#             # If the distance is smaller than the current minimum distance, update
-#             if distance < min_distance:
-#                 min_distance = distance
-#                 min_key = key
-
-#     return min_key
+    return None

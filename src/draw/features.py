@@ -3,6 +3,7 @@ import copy
 import matplotlib.pyplot as plt
 
 from graph.interaction_graph import InteractionNode
+from graph.mapping import results_to_interaction_graph_cliques
 from mol_processing.features import Feature
 from utils.dataclasses import OrderedTupleDict
 
@@ -121,3 +122,16 @@ def draw_docking(
     _format_axes(ax)
     fig.tight_layout()
     plt.show()
+
+
+def draw_multiple_dockings(
+    L_features: list[Feature],
+    L_distance_matrix: OrderedTupleDict,
+    R_features: list[Feature],
+    R_distance_matrix: OrderedTupleDict,
+    cliques_list: list[list[str]],
+) -> None:
+    nodes_cliques = results_to_interaction_graph_cliques(cliques_list, L_features, R_features)
+
+    for clique in nodes_cliques:
+        draw_docking(L_features, L_distance_matrix, R_features, R_distance_matrix, clique)
