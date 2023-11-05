@@ -138,9 +138,9 @@ def build_nx_weighted_graph(
 
     # Add nodes to the graph with their weights
     for node in nodes:
-        G.add_node(node.name, weight=node.weight)
+        G.add_node(node.name, weight=node.weight, interaction_node=node)
 
-    # Add edges to the graph with their weights
+    # Add edges to the graph
     for edge in edges:
         G.add_edge(edge[0].name, edge[1].name)
 
