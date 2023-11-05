@@ -8,6 +8,9 @@ from scipy.optimize import minimize
 from scipy.spatial import KDTree
 from scipy.spatial.distance import pdist, squareform
 
+from graph.interaction_graph import InteractionNode
+from mol_processing.features import Feature, find_feature_by_name
+
 
 def build_complementary_graph(G: nx.graph) -> nx.graph:
     """Returns the complementary graph of the given graph."""
@@ -82,3 +85,36 @@ def embed_problem_to_QPU(G: nx.Graph) -> Register:
 
     # Return the UDG graph embedded into the register.
     return embed_to_register(UDG_positions)
+
+
+def results_to_interaction_graph_cliques(
+    cliques: list[list[str]],
+    L_features: list[Feature],
+    R_features: list[Feature],
+) -> list[list[InteractionNode]]:
+    """Maps back the results of the quantum solver to the corresponding interaction nodes.
+
+    Args:
+        cliques (list[list[str]]):
+            List of cliques, which are a list of the corresponding nodes' names.
+        R_features (list[Feature]): Receptor features list.
+        L_features (list[Feature]): Ligand features list.
+
+    Returns:
+        list[list[InteractionNode]]: _description_
+    """
+    cliques_list = []
+
+    for clique in cliques:
+        nodes_list = []
+        for node_name in clique:
+            L_feat_name, R_feat_name = tuple(node_name.split("-"))
+
+            L_feat = find_feature_by_name(L_feat_name, L_features)
+            R_feat = find_feature_by_name(R_feat_name, R_features)
+
+            nodes_list.append(InteractionNode(L_feat, R_feat, 1))
+
+        cliques_list.append(nodes_list)
+
+    return cliques_list
