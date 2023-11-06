@@ -9,7 +9,7 @@ from scipy.spatial import KDTree
 from scipy.spatial.distance import pdist, squareform
 
 from graph.interaction_graph import InteractionNode
-from mol_processing.features import Feature, find_feature_by_name
+from mol_processing.features import find_feature_by_name
 
 
 def build_complementary_graph(G: nx.graph) -> nx.graph:
@@ -89,8 +89,8 @@ def demo_positions(G: nx.graph) -> dict:
         "H12-d8": (-0.1, -6.8),
         "H30-d8": (11.7, -7.3),
         "H28-d8": (5.3, -17.3),
-        "LINK-1": (14, 8),
-        "LINK-2": (15, 0),
+        "LINK-0": (14, 8),
+        "LINK-1": (15, 0),
     }
 
 
@@ -120,10 +120,10 @@ def embed_problem_to_QPU(G: nx.Graph) -> Register:
 
 
 def results_to_interaction_graph_cliques(
-    cliques: list[list[str]],
-    L_features: list[Feature],
-    R_features: list[Feature],
-) -> list[list[InteractionNode]]:
+    cliques,  #: list[list[str]]
+    L_features,  # : list[Feature],
+    R_features,  # : list[Feature]
+):  # -> list[list[InteractionNode]]
     """Maps back the results of the quantum solver to the corresponding interaction nodes.
 
     Args:
