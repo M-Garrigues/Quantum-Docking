@@ -45,7 +45,7 @@ def map_to_UDG(G: nx.graph) -> dict:
         args=(adjacency_matrix * 2, shape),
         method="COBYLA",
         tol=1e-6,
-        options={"maxiter": 200000},
+        options={"maxiter": 2e5},
     )
     coords = np.reshape(res.x, (len(adjacency_matrix), 2))
 
@@ -60,6 +60,38 @@ def map_to_UDG(G: nx.graph) -> dict:
         )
 
     return dict(zip(G.nodes(), coords))
+
+
+def add_quantum_link(G: nx.graph, node_A: str, node_B: str, chain_size: int = 1) -> None:
+    link_name = "LINK"
+    n_nodes = 2 * chain_size  # To keep the entanglement in the desired state
+    # Reference: https://journals.aps.org/prxquantum/pdf/10.1103/PRXQuantum.3.030305
+
+    for n in range(n_nodes):
+        G.add_node(link_name + "-" + str(n))
+
+        if n == 0:
+            G.add_edge(node_A, link_name + "-" + str(n))
+        else:
+            G.add_edge(link_name + "-" + str(n - 1), link_name + "-" + str(n))
+
+        if n == n_nodes - 1:
+            G.add_edge(link_name + "-" + str(n), node_B)
+
+    G.remove_edge(node_A, node_B)
+
+
+def demo_positions(G: nx.graph) -> dict:
+    return {
+        "H28-d6": (-4.2, 16.3),
+        "H12-d6": (-3.3, 4.6),
+        "H30-d6": (6.4, 11.2),
+        "H12-d8": (-0.1, -6.8),
+        "H30-d8": (11.7, -7.3),
+        "H28-d8": (5.3, -17.3),
+        "LINK-1": (14, 8),
+        "LINK-2": (15, 0),
+    }
 
 
 def embed_to_register(positions: dict) -> Register:

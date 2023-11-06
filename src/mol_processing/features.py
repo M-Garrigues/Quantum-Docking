@@ -91,3 +91,19 @@ def find_feature_by_name(name: str, features_list: list[Feature]) -> Feature | N
             return feat
 
     return None
+
+
+def spatial_selection(features_list: list[Feature], coordinates: list[tuple]):
+    spatial_selection = []
+    for feat in features_list:
+        accept = True
+        for i, axis_pos in enumerate(feat.position):
+            # print(axis_pos, coordinates[i])
+            if not (coordinates[i][0] <= axis_pos and axis_pos <= coordinates[i][1]):
+                # print("ciao")
+                accept = False
+                break
+        if accept:
+            spatial_selection.append(feat)
+
+    return spatial_selection
