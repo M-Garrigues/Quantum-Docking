@@ -116,7 +116,7 @@ def VQAA(
             x0=np.r_[random_time, random_omega, random_detuning],
             method=minimizer_method,
             tol=1e-5,
-            options={"maxiter": 10},
+            options={"maxiter": 20},
         )
 
         # print(res.fun)
