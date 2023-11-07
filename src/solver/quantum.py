@@ -138,6 +138,23 @@ def solver_VQAA(
     minimizer_method="Nelder-Mead",
     repetitions=10,
 ):
+    """Variational Quantum Adiabatic Algorithm solver.
+
+    Args:
+        atomic_register: The atomic register representing the problem in the quantum device.
+        graph: The networkx graph used before the encoding to the register
+        number_best_solutions: The amount of solutions to output from the best ones
+        omega_range: The range of frequencies to used for the optimizer parameters. Default (1,5)
+        detuning_range: The range of detuning to used for the optimizer parameters. Default (1,5)
+        time_range: Range of time evolution for QAA used in optimizer parameters. Default (8,25)
+        minimizer_method: Minimizer to use from scipy. Default Nelder-Mead
+        repetitions: The number of times to repeat the optimization. Default(10)
+
+    Returns:
+        counts_sorted: The dictionary of counts of the QAA with the optimal parameters
+        opt_params: Optimal parameters for the QAA
+        solution:  The list of solutions given the optimal parameters
+    """
     opt_params = VQAA(
         atomic_register,
         graph,
@@ -165,7 +182,7 @@ def solver_VQAA(
             element += 1
         solution.append(solutions_iterations)
 
-    return counts_sorted, solution
+    return counts_sorted, opt_params, solution
 
 
 def plot_distribution(C):
