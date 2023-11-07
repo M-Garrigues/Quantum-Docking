@@ -11,7 +11,7 @@ from scipy.optimize import minimize
 
 
 ## Calculating the cost of a single configuaration of the graph
-def get_cost(bitstring, G, penalty=10):
+def get_cost(bitstring, G, penalty=10):  # 10
     z = np.array(list(bitstring), dtype=int)
     A = np.array(nx.adjacency_matrix(G).todense())
 
@@ -21,8 +21,8 @@ def get_cost(bitstring, G, penalty=10):
 
 
 ## Weighted average over all the configurations of the graph
-def get_avg_cost(counts, G):
-    avg_cost = sum(counts[key] * get_cost(key, G) for key in counts)
+def get_avg_cost(counts, G, penalty_term):
+    avg_cost = sum(counts[key] * get_cost(key, G, penalty_term) for key in counts)
     avg_cost = avg_cost / sum(counts.values())  # Divide by total samples
 
     return avg_cost
@@ -34,7 +34,7 @@ def func(param, *args):
     G = args[0][0]
     register = args[0][1]
     C = quantum_loop(param, register)
-    cost = get_avg_cost(C, G)
+    cost = get_avg_cost(C, G, args[0][2])
 
     return cost
 
@@ -95,6 +95,7 @@ def quantum_loop(parameters, register):
 def VQAA(
     atomic_register,
     graph,
+    penalty,
     omega_range=(1, 5),
     detuning_range=(1, 5),
     time_range=(8, 25),
@@ -112,7 +113,7 @@ def VQAA(
 
         res = minimize(
             func,
-            args=[graph, atomic_register],
+            args=[graph, atomic_register, penalty],
             x0=np.r_[random_time, random_omega, random_detuning],
             method=minimizer_method,
             tol=1e-5,
@@ -131,6 +132,7 @@ def VQAA(
 def solver_VQAA(
     atomic_register,
     graph,
+    penalty_term,
     number_best_solutions=5,
     omega_range=(1, 5),
     detuning_range=(2, 5),
@@ -143,6 +145,7 @@ def solver_VQAA(
     Args:
         atomic_register: The atomic register representing the problem in the quantum device
         graph: The networkx graph used before the encoding to the register
+        penalty_term: Penalty term for the cost fucntion to optimize
         number_best_solutions: The amount of solutions to output from the best ones
         omega_range: The range of frequencies to used for the optimizer parameters. Default (1,5)
         detuning_range: The range of detuning to used for the optimizer parameters. Default (1,5)
@@ -160,6 +163,7 @@ def solver_VQAA(
     opt_params = VQAA(
         atomic_register,
         graph,
+        penalty_term,
         omega_range,
         detuning_range,
         time_range,
