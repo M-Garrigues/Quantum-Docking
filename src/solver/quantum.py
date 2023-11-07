@@ -5,13 +5,13 @@ import networkx as nx
 import numpy as np
 from pulser import Pulse, Sequence
 from pulser.devices import Chadoq2
-from pulser.waveforms import InterpolatedWaveform
+from pulser.waveforms import InterpolatedWaveform, RampWaveform
 from pulser_simulation import QutipEmulator
 from scipy.optimize import minimize
 
 
 ## Calculating the cost of a single configuaration of the graph
-def get_cost(bitstring, G, penalty=10):
+def get_cost(bitstring, G, penalty=10):  # 10
     z = np.array(list(bitstring), dtype=int)
     A = np.array(nx.adjacency_matrix(G).todense())
 
@@ -21,25 +21,35 @@ def get_cost(bitstring, G, penalty=10):
 
 
 ## Weighted average over all the configurations of the graph
-def get_avg_cost(counts, G):
-    avg_cost = sum(counts[key] * get_cost(key, G) for key in counts)
+def get_avg_cost(counts, G, penalty_term):
+    avg_cost = sum(counts[key] * get_cost(key, G, penalty_term) for key in counts)
     avg_cost = avg_cost / sum(counts.values())  # Divide by total samples
 
     return avg_cost
 
 
 ## Cost function to minimize
-def func(param, *args):
+def func_complex(param, *args):
     # print(args)
     G = args[0][0]
     register = args[0][1]
-    C = quantum_loop(param, register)
-    cost = get_avg_cost(C, G)
+    C = complex_quantum_loop(param, register)
+    cost = get_avg_cost(C, G, args[0][2])
 
     return cost
 
 
-def adiabatic_sequence(device, register, time, Omega=3.271543, detuning=5):
+def func_simple(param, *args):
+    # print(args)
+    G = args[0][0]
+    register = args[0][1]
+    C = simple_quantum_loop(param, register)
+    cost = get_avg_cost(C, G, args[0][2])
+
+    return cost
+
+
+def simple_adiabatic_sequence(device, register, time, Omega=3.271543, detuning=5):
     """Creates the adiabatic sequence
 
     Args:
@@ -64,7 +74,62 @@ def adiabatic_sequence(device, register, time, Omega=3.271543, detuning=5):
 
     sequence = Sequence(register, device)
     sequence.declare_channel("ising", "rydberg_global")
+
     sequence.add(adiabatic_pulse, "ising")
+
+    return sequence
+
+
+def complex_adiabatic_sequence(
+    device,
+    register,
+    time1,
+    time2,
+    Omega=3.271543,
+    detuning=5,
+    detuning2=4,
+):
+    """Creates the adiabatic sequence
+
+    Args:
+        device: physical device simulation
+        Omega: Frecuency
+        register: arrangement of atoms in a quantum processor
+        time1: time rise for Rampwaveform
+        time2: time fall for Rampwaveform
+        detuning: initial detuning for Rampwaveform
+        detuning2: final detuning for Rampwaveform
+
+    Returns:
+        sequence
+    """
+
+    delta_0 = -detuning
+    delta_f = detuning2
+
+    t_sweep = (delta_f - delta_0) / (2 * np.pi * 10) * 1000
+
+    rise = Pulse.ConstantDetuning(
+        RampWaveform(time1, 0.0, Omega),
+        delta_0,
+        0.0,
+    )
+    sweep = Pulse.ConstantAmplitude(
+        Omega,
+        RampWaveform(t_sweep, delta_0, delta_f),
+        0.0,
+    )
+    fall = Pulse.ConstantDetuning(
+        RampWaveform(time2, Omega, 0.0),
+        delta_f,
+        0.0,
+    )
+
+    sequence = Sequence(register, device)
+    sequence.declare_channel("ising", "rydberg_global")
+    sequence.add(rise, "ising")
+    sequence.add(sweep, "ising")
+    sequence.add(fall, "ising")
 
     return sequence
 
@@ -72,11 +137,39 @@ def adiabatic_sequence(device, register, time, Omega=3.271543, detuning=5):
 # Building the quantum loop
 
 
-def quantum_loop(parameters, register):
+def complex_quantum_loop(parameters, register):
+    params = np.array(parameters)
+
+    (
+        parameter_time1,
+        parameter_time2,
+        parameter_omega,
+        parameter_detuning1,
+        parameter_detuning2,
+    ) = np.reshape(params.astype(int), 5)
+    seq = complex_adiabatic_sequence(
+        Chadoq2,
+        register,
+        parameter_time1,
+        parameter_time2,
+        Omega=parameter_omega,
+        detuning=parameter_detuning1,
+        detuning2=parameter_detuning2,
+    )
+
+    simul = QutipEmulator.from_sequence(seq, sampling_rate=0.1)
+    res = simul.run()
+    counts = res.sample_final_state(N_samples=5000)  # Sample from the state vector
+    # print(counts)
+
+    return counts
+
+
+def simple_quantum_loop(parameters, register):
     params = np.array(parameters)
 
     parameter_time, parameter_omega, parameter_detuning = np.reshape(params.astype(int), 3)
-    seq = adiabatic_sequence(
+    seq = simple_adiabatic_sequence(
         Chadoq2,
         register,
         parameter_time,
@@ -86,7 +179,7 @@ def quantum_loop(parameters, register):
 
     simul = QutipEmulator.from_sequence(seq, sampling_rate=0.1)
     res = simul.run()
-    counts = res.sample_final_state(N_samples=1000)  # Sample from the state vector
+    counts = res.sample_final_state(N_samples=5000)  # Sample from the state vector
     # print(counts)
 
     return counts
@@ -95,11 +188,14 @@ def quantum_loop(parameters, register):
 def VQAA(
     atomic_register,
     graph,
+    penalty,
     omega_range=(1, 5),
     detuning_range=(1, 5),
     time_range=(8, 25),
     minimizer_method="Nelder-Mead",
     repetitions=10,
+    simple_sequence=True,
+    complex_sequence=False,
 ):
     scores = []
     params = []
@@ -107,17 +203,36 @@ def VQAA(
     for repetition in range(repetitions):
         testing.append(repetition)
         random_omega = np.random.uniform(omega_range[0], omega_range[1])
-        random_detuning = np.random.uniform(detuning_range[0], detuning_range[1])
-        random_time = 1000 * np.random.randint(time_range[0], time_range[1])
+        random_detuning2 = np.random.uniform(detuning_range[0], detuning_range[1])
+        random_detuning1 = np.random.uniform(detuning_range[0], detuning_range[1])
+        random_time1 = 1000 * np.random.randint(time_range[0], time_range[1])
+        random_time2 = 1000 * np.random.randint(time_range[0], time_range[1])
 
-        res = minimize(
-            func,
-            args=[graph, atomic_register],
-            x0=np.r_[random_time, random_omega, random_detuning],
-            method=minimizer_method,
-            tol=1e-5,
-            options={"maxiter": 20},
-        )
+        if complex_sequence is True:
+            res = minimize(
+                func_complex,
+                args=[graph, atomic_register, penalty],
+                x0=np.r_[
+                    random_time1,
+                    random_time2,
+                    random_omega,
+                    random_detuning1,
+                    random_detuning2,
+                ],
+                method=minimizer_method,
+                tol=1e-5,
+                options={"maxiter": 20},
+            )
+
+        if simple_sequence is True:
+            res = minimize(
+                func_simple,
+                args=[graph, atomic_register, penalty],
+                x0=np.r_[random_time1, random_omega, random_detuning1],
+                method=minimizer_method,
+                tol=1e-5,
+                options={"maxiter": 20},
+            )
 
         # print(res.fun)
         scores.append(res.fun)
@@ -131,24 +246,55 @@ def VQAA(
 def solver_VQAA(
     atomic_register,
     graph,
+    penalty_term,
     number_best_solutions=5,
     omega_range=(1, 5),
     detuning_range=(2, 5),
     time_range=(8, 28),
     minimizer_method="Nelder-Mead",
     repetitions=10,
+    simple_sequence=True,
+    complex_sequence=False,
 ):
+    """Variational Quantum Adiabatic Algorithm solver
+
+    Args:
+        atomic_register: The atomic register representing the problem in the quantum device
+        graph: The networkx graph used before the encoding to the register
+        penalty_term: Penalty term for the cost fucntion to optimize
+        number_best_solutions: The amount of solutions to output from the best ones
+        omega_range: The range of frequencies to used for the optimizer parameters. Default (1,5)
+        detuning_range: The range of detuning to used for the optimizer parameters. Default (1,5)
+        time_range:Range of time evolution for QAA to used in optimizer parameters.Default (8,25)
+        minimizer_method: Minimizer to use from scipy. Default Nelder-Mead
+        repetitions: The number of times to repeat the optimization. Default(10)
+        simple_sequence: A simple adiabatic sequence with InterpolatedWaveform. Default True
+        complex_sequence: A complex adiabatic sequence with  RampWaveform. Default False
+
+    Returns:
+        counts_sorted: The dictionary of counts of the QAA with the optimal parameters
+        opt_params:  Optimal parameters for the QAA
+        solution: The list of solutions given the optimal parameters
+
+    """
+
     opt_params = VQAA(
         atomic_register,
         graph,
+        penalty_term,
         omega_range,
         detuning_range,
         time_range,
         minimizer_method,
         repetitions,
+        simple_sequence,
+        complex_sequence,
     )
+    if simple_sequence is True:
+        counts = simple_quantum_loop(opt_params, atomic_register)
 
-    counts = quantum_loop(opt_params, atomic_register)
+    if complex_sequence is True:
+        counts = complex_quantum_loop(opt_params, atomic_register)
 
     counts_sorted = dict(sorted(counts.items(), key=lambda item: item[1], reverse=True))
 
@@ -165,7 +311,7 @@ def solver_VQAA(
             element += 1
         solution.append(solutions_iterations)
 
-    return counts_sorted, solution
+    return counts_sorted, opt_params, solution
 
 
 def plot_distribution(C):
