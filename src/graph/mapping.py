@@ -42,7 +42,7 @@ def map_to_UDG(G: nx.graph) -> dict:
     res = minimize(
         _evaluate_mapping,
         x0,
-        args=(adjacency_matrix * 5, shape),
+        args=(adjacency_matrix * 2, shape),
         method="COBYLA",
         tol=1e-6,
         options={"maxiter": 2e5},
