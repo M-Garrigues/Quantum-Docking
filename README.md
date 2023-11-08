@@ -1,7 +1,25 @@
 # Quantum-Docking
 
-As part of the Blaise Pascal's [Re]Generative Quantum Challenge, we attempt to use neutral atoms to speed up molecular docking.
+As part of the Blaise Pascal's [Re]Generative Quantum Challenge, we attempt to use neutral atoms to simulate molecular docking.
 
+It features code to go from two molecule files to their binding interaction graph. It then has a quantum solver using VQAA to get the maximum clique out of the graph, representing the most probable binding conformations.
+
+
+=== 	   Installation	 ===
+
+This repo is designed for python >3.10.
+
+To install the environment, run
+
+```bash
+pip install -r requirements.txt
+```
+
+
+
+
+
+=== 	   Dev	 ===
 
 Installation and usage of pre-commit:
 
