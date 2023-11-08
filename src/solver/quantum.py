@@ -1,3 +1,4 @@
+"""Module containing the VQAA solver."""
 from itertools import islice
 
 import matplotlib.pyplot as plt
@@ -10,8 +11,8 @@ from pulser_simulation import QutipEmulator
 from scipy.optimize import minimize
 
 
-## Calculating the cost of a single configuaration of the graph
-def get_cost(bitstring, G, penalty=10):  # 10
+def get_cost(bitstring, G, penalty=10) -> float:
+    """Calculating the cost of a single configuaration of the graph"""
     z = np.array(list(bitstring), dtype=int)
     A = np.array(nx.adjacency_matrix(G).todense())
 
@@ -20,17 +21,16 @@ def get_cost(bitstring, G, penalty=10):  # 10
     return cost
 
 
-## Weighted average over all the configurations of the graph
-def get_avg_cost(counts, G, penalty_term):
+def get_avg_cost(counts, G, penalty_term) -> float:
+    """Weighted average over all the configurations of the graph"""
     avg_cost = sum(counts[key] * get_cost(key, G, penalty_term) for key in counts)
     avg_cost = avg_cost / sum(counts.values())  # Divide by total samples
 
     return avg_cost
 
 
-## Cost function to minimize
-def func_complex(param, *args):
-    # print(args)
+def func_complex(param, *args) -> float:
+    """Cost function to minimize in VQAA"""
     G = args[0][0]
     register = args[0][1]
     C = complex_quantum_loop(param, register)
@@ -39,8 +39,7 @@ def func_complex(param, *args):
     return cost
 
 
-def func_simple(param, *args):
-    # print(args)
+def func_simple(param, *args) -> float:
     G = args[0][0]
     register = args[0][1]
     C = simple_quantum_loop(param, register)
@@ -49,7 +48,7 @@ def func_simple(param, *args):
     return cost
 
 
-def simple_adiabatic_sequence(device, register, time, Omega=3.271543, detuning=5):
+def simple_adiabatic_sequence(device, register, time, Omega=3.271543, detuning=5) -> Sequence:
     """Creates the adiabatic sequence
 
     Args:
@@ -62,7 +61,6 @@ def simple_adiabatic_sequence(device, register, time, Omega=3.271543, detuning=5
     Returns:
         sequence
     """
-
     delta_0 = -detuning
     delta_f = -delta_0
 
@@ -88,7 +86,7 @@ def complex_adiabatic_sequence(
     Omega=3.271543,
     detuning=5,
     detuning2=4,
-):
+) -> Sequence:
     """Creates the adiabatic sequence
 
     Args:
@@ -103,7 +101,6 @@ def complex_adiabatic_sequence(
     Returns:
         sequence
     """
-
     delta_0 = -detuning
     delta_f = detuning2
 
@@ -147,6 +144,7 @@ def complex_quantum_loop(parameters, register):
         parameter_detuning1,
         parameter_detuning2,
     ) = np.reshape(params.astype(int), 5)
+
     seq = complex_adiabatic_sequence(
         Chadoq2,
         register,
@@ -160,7 +158,6 @@ def complex_quantum_loop(parameters, register):
     simul = QutipEmulator.from_sequence(seq, sampling_rate=0.1)
     res = simul.run()
     counts = res.sample_final_state(N_samples=5000)  # Sample from the state vector
-    # print(counts)
 
     return counts
 
@@ -196,7 +193,24 @@ def VQAA(
     repetitions=10,
     simple_sequence=True,
     complex_sequence=False,
-):
+) -> list:
+    """Main function for the VQAA algorithm.
+
+    Args:
+        atomic_register (_type_): _description_
+        graph (_type_): _description_
+        penalty (_type_): _description_
+        omega_range (tuple, optional): _description_. Defaults to (1, 5).
+        detuning_range (tuple, optional): _description_. Defaults to (1, 5).
+        time_range (tuple, optional): _description_. Defaults to (8, 25).
+        minimizer_method (str, optional): _description_. Defaults to "Nelder-Mead".
+        repetitions (int, optional): _description_. Defaults to 10.
+        simple_sequence (bool, optional): _description_. Defaults to True.
+        complex_sequence (bool, optional): _description_. Defaults to False.
+
+    Returns:
+        list: List of all final parameters.
+    """
     scores = []
     params = []
     testing = []

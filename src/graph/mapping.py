@@ -19,10 +19,10 @@ def build_complementary_graph(G: nx.graph) -> nx.graph:
 
 def _evaluate_mapping(new_coords, *args):
     """Cost function to minimize. Ideally, the pairwise distances are conserved."""
-    test, shape = args
+    x, shape = args
     new_coords = np.reshape(new_coords, shape)
     new_Q = squareform(Chadoq2.interaction_coeff / pdist(new_coords) ** 6)
-    return np.linalg.norm(new_Q - test)
+    return np.linalg.norm(new_Q - x)
 
 
 def map_to_UDG(G: nx.graph) -> dict:
@@ -54,7 +54,7 @@ def map_to_UDG(G: nx.graph) -> dict:
     edges = KDTree(coords).query_pairs(Chadoq2.rydberg_blockade_radius(1.0) * (1 + epsilon))
     bonds = coords[(tuple(edges),)]
 
-    if len(bonds) != len(adjacency_matrix):
+    if len(bonds) != len(G.edges()):
         print(
             "Problem while generating UDG graph: the number of resulting edges is not equal to the inital number of  edges.",  # pylint: disable=C0301
         )
@@ -63,6 +63,14 @@ def map_to_UDG(G: nx.graph) -> dict:
 
 
 def add_quantum_link(G: nx.graph, node_A: str, node_B: str, chain_size: int = 1) -> None:
+    """Adds a quantum link of n * 2 nodes between two nodes in a graph.
+
+    Args:
+        G (nx.graph): The graph to modify.
+        node_A (str): Node from which the link starts.
+        node_B (str): Node where the link ends.
+        chain_size (int, optional): Number of ancillary node pairs. Defaults to 1.
+    """
     link_name = "LINK"
     n_nodes = 2 * chain_size  # To keep the entanglement in the desired state
     # Reference: https://journals.aps.org/prxquantum/pdf/10.1103/PRXQuantum.3.030305
