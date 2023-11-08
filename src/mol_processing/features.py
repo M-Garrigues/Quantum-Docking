@@ -86,6 +86,7 @@ def name_features_by_count(features: list[Feature], is_ligand: bool) -> None:
 
 
 def find_feature_by_name(name: str, features_list: list[Feature]) -> Feature | None:
+    """Returns a Feature by name if it exists in a list, else None"""
     for feat in features_list:
         if name == feat.name:
             return feat
@@ -93,14 +94,21 @@ def find_feature_by_name(name: str, features_list: list[Feature]) -> Feature | N
     return None
 
 
-def spatial_selection(features_list: list[Feature], coordinates: list[tuple]):
+def spatial_selection(features_list: list[Feature], coordinates: list[tuple]) -> list[Feature]:
+    """Selects features from a list, if they fit in the n sized coordinates intervals.
+
+    Args:
+        features_list (list[Feature]): list of features.
+        coordinates (list[tuple]): n tuple of tuples of coordinates, representing an interval.
+
+    Returns:
+        list[Feature]: The selected features.
+    """
     spatial_selection = []
     for feat in features_list:
         accept = True
         for i, axis_pos in enumerate(feat.position):
-            # print(axis_pos, coordinates[i])
             if not (coordinates[i][0] <= axis_pos and axis_pos <= coordinates[i][1]):
-                # print("ciao")
                 accept = False
                 break
         if accept:
