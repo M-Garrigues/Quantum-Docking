@@ -22,13 +22,13 @@ repos:
         args: [--py36-plus]
 
   - repo: https://github.com/hadialqattan/pycln
-    rev: v2.3.0
+    rev: v2.4.0
     hooks:
       - id: pycln
         args: [--config=pyproject.toml]
 
   - repo: https://github.com/pycqa/isort
-    rev: 5.12.0
+    rev: 5.13.2
     hooks:
       - id: isort
         files: "\\.(py)$"
@@ -51,15 +51,16 @@ repos:
       - id: blacken-docs
 
   - repo: https://github.com/pycqa/pylint
-    rev: v3.0.1
+    rev: v3.0.3
     hooks:
     -   id: pylint
         args:
         - --rcfile=./config/.pylintrc
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.6.1
+    rev: v1.8.0
     hooks:
       - id: mypy
         additional_dependencies: [types-all]
         exclude: ^testing/resources/
+        #args: [--python-version=3.11]

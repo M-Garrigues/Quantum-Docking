@@ -1,6 +1,7 @@
 import json
 import os
 from math import sqrt
+from typing import Self
 
 import networkx as nx
 import pulser
@@ -9,6 +10,10 @@ from scipy.spatial import KDTree
 
 
 class GraphRegister(pulser.Register):
+    """Extension of Pulser's Register object to deal with classical graphs.
+    Adds ways to get a graph from a register, and to load/save it with files.
+    """
+
     s_qubits: dict = {}
     metadata: dict = {}
 
@@ -20,8 +25,28 @@ class GraphRegister(pulser.Register):
     def __repr__(self) -> str:
         return super().__repr__()
 
+    def __str__(self) -> str:
+        return json.dumps({"qubits": self.s_qubits, "metadata": self.metadata}, indent=4)
+
     @classmethod
-    def from_json(cls, json_path: str) -> pulser.Register:
+    def from_json(cls, json_path: str) -> Self:
+        """Load a register from a list of positions in json file.
+
+        Args:
+            json_path (str): Where the json is stored
+
+        Example:
+            {
+                "qubits": {
+                    "q0": [-4.5, -2.3],
+                    "q1": [0.74, 2.85],
+                    "q2": [7.9, 3.4]
+                }
+            }
+
+        Returns:
+            Self: The initialised register.
+        """
         with open(json_path) as f:
             json_config = json.load(f)
 
@@ -35,10 +60,12 @@ class GraphRegister(pulser.Register):
 
         return register
 
-    def set_metadata(self, new_metadata: dict):
+    def set_metadata(self, new_metadata: dict) -> None:
+        """Metadata setter function."""
         self.metadata = new_metadata
 
     def to_json_file(self, json_path: str) -> None:
+        """Saves current registry qubits and metadata to a json file."""
         register_infos = {"qubits": self.s_qubits, "metadata": self.metadata}
 
         with open(json_path, mode="w+") as f:
@@ -54,6 +81,10 @@ class GraphRegister(pulser.Register):
         return nx.Graph(edges)
 
     def _find_connected_qubits(self) -> list:
+        """Finds the graph corresponding to the given register."""
+
+        # TODO: Improve the stability of this.
+
         epsilon = 1e-9
         qubit_coordinates = {tuple(coord): qubit for qubit, coord in self.s_qubits.items()}
         edges = KDTree(list(qubit_coordinates.keys())).query_pairs(
@@ -63,7 +94,16 @@ class GraphRegister(pulser.Register):
         return list(edges)
 
     @classmethod
-    def triangle(cls, rows: int, spacing: int):
+    def triangle(cls, rows: int, spacing: int) -> Self:
+        """Initializes the register with the qubits in a triangular array.
+
+        Args:
+            rows (int): Number of rows.
+            spacing (int): Vertical spacing between the qubits. Adjusted for horizontal spacing.
+
+        Returns:
+            GraphRegister: The initialised register.
+        """
         qubits = {}
         qubit_index = 0
 
@@ -77,8 +117,6 @@ class GraphRegister(pulser.Register):
                 qubits[qubit_index] = (x, y)
                 qubit_index += 1
 
-        print(qubits)
-
         return cls(qubits)
 
 
@@ -90,7 +128,7 @@ def generate_multiple_configurations(folder: str, max_qubits: int = 14) -> None:
         max_qubits (int, optional): Maximal number of qubits of the configurations. Defaults to 14.
     """
 
-    # Ugly hack to make it work quickly
+    # Hacky function to make it work quickly
 
     for spacing in range(6, 11):
         for i in range(2, max_qubits):
