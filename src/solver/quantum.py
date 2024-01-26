@@ -219,8 +219,14 @@ def VQAA(
         random_omega = np.random.uniform(omega_range[0], omega_range[1])
         random_detuning2 = np.random.uniform(detuning_range[0], detuning_range[1])
         random_detuning1 = np.random.uniform(detuning_range[0], detuning_range[1])
-        random_time1 = 1000 * np.random.randint(time_range[0], time_range[1])
-        random_time2 = 1000 * np.random.randint(time_range[0], time_range[1])
+        random_time1 = 1000 * np.random.uniform(
+            time_range[0],
+            time_range[1],
+        )  # np.random.randint(time_range[0], time_range[1])
+        random_time2 = 1000 * np.random.uniform(
+            time_range[0],
+            time_range[1],
+        )  # np.random.randint(time_range[0], time_range[1])
 
         if complex_sequence is True:
             res = minimize(
@@ -235,7 +241,7 @@ def VQAA(
                 ],
                 method=minimizer_method,
                 tol=1e-5,
-                options={"maxiter": 20},
+                options={"maxiter": 200},  # 20
             )
 
         if simple_sequence is True:
@@ -245,7 +251,7 @@ def VQAA(
                 x0=np.r_[random_time1, random_omega, random_detuning1],
                 method=minimizer_method,
                 tol=1e-5,
-                options={"maxiter": 20},
+                options={"maxiter": 200},
             )
 
         # print(res.fun)

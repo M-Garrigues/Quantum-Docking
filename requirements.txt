@@ -1,6 +1,7 @@
 matplotlib
 networkx
 numpy
+openqaoa-qiskit
 pulser
 rdkit
 scipy
