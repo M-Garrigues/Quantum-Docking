@@ -1,7 +1,7 @@
 import json
 import os
 from math import sqrt
-from typing import Self
+from typing import Self  # type: ignore
 
 import networkx as nx
 import pulser
@@ -80,7 +80,11 @@ class GraphRegister(pulser.Register):
         edges = self._find_connected_qubits()
         return nx.Graph(edges)
 
-    def _find_connected_qubits(self) -> list:
+    def graph_radius(self, radius=1) -> nx.Graph:
+        edges = self._find_connected_qubits(radius)
+        return nx.Graph(edges)
+
+    def _find_connected_qubits(self, radius=1) -> list:
         """Finds the graph corresponding to the given register."""
 
         # TODO: Improve the stability of this.
@@ -88,7 +92,7 @@ class GraphRegister(pulser.Register):
         epsilon = 1e-9
         qubit_coordinates = {tuple(coord): qubit for qubit, coord in self.s_qubits.items()}
         edges = KDTree(list(qubit_coordinates.keys())).query_pairs(
-            Chadoq2.rydberg_blockade_radius(1) * (1 + epsilon),
+            Chadoq2.rydberg_blockade_radius(radius) * (1 + epsilon),
         )
 
         return list(edges)
@@ -130,30 +134,38 @@ def generate_multiple_configurations(folder: str, max_qubits: int = 14) -> None:
 
     # Hacky function to make it work quickly
 
-    for spacing in range(6, 11):
+    for spacing in range(6, 12):
         for i in range(2, max_qubits):
-            for j in range(1, max_qubits // i):
+            for j in range(1, round(sqrt(max_qubits))):
                 register = GraphRegister.rectangle(rows=i, columns=j, spacing=spacing)
-                nb_qubits = str(register.size)
-                register.to_json_file(
-                    os.path.join(folder, f"{nb_qubits}_rectangle_{i}_{j}_{spacing}.json"),
-                )
+                nb_qubits = register.size
+                if nb_qubits <= max_qubits:
+                    register.to_json_file(
+                        os.path.join(folder, f"{str(nb_qubits)}_rectangle_{i}_{j}_{spacing}.json"),
+                    )
 
                 register = GraphRegister.triangular_lattice(
                     rows=i,
                     atoms_per_row=j,
                     spacing=spacing,
                 )
-                nb_qubits = str(register.size)
+                nb_qubits = register.size
+                if nb_qubits <= max_qubits:
+                    register.to_json_file(
+                        os.path.join(folder, f"{str(nb_qubits)}_latice_{i}_{j}_{spacing}.json"),
+                    )
+
+        for l in range(1, int(sqrt(max_qubits) + 1)):
+            register = GraphRegister.hexagon(layers=l, spacing=spacing)
+            nb_qubits = register.size
+            if nb_qubits <= max_qubits:
                 register.to_json_file(
-                    os.path.join(folder, f"{nb_qubits}_latice_{i}_{j}_{spacing}.json"),
+                    os.path.join(folder, f"{str(nb_qubits)}_hexagon_{l}_{spacing}.json"),
                 )
 
-        for l in range(1, int(sqrt(max_qubits))):
-            register = GraphRegister.hexagon(layers=l, spacing=spacing)
-            nb_qubits = str(register.size)
-            register.to_json_file(os.path.join(folder, f"{nb_qubits}_hexagon_{l}_{spacing}.json"))
-
             register = GraphRegister.triangle(rows=l, spacing=spacing)
-            nb_qubits = str(register.size)
-            register.to_json_file(os.path.join(folder, f"{nb_qubits}_triangle_{l}_{spacing}.json"))
+            nb_qubits = register.size
+            if nb_qubits <= max_qubits:
+                register.to_json_file(
+                    os.path.join(folder, f"{str(nb_qubits)}_triangle_{l}_{spacing}.json"),
+                )
