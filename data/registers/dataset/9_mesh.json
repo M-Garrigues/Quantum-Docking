@@ -39,16 +39,16 @@
     },
     "metadata": {
         "score": {
-            "total": 3.334521987,
-            "gini_score": 0.9360850000000001,
-            "sum_score": 3.5622
+            "total": 2.7025496689655175,
+            "gini_score": 0.8637103448275862,
+            "sum_score": 3.129
         },
         "params": {
-            "rise_time": 1005,
-            "fall_time": 2167,
-            "omega": 13.325439362851622,
-            "init_detuning": 6.990816639688585,
-            "final_detuning": 7.972556061209903
+            "rise_time": 1364,
+            "fall_time": 1579,
+            "omega": 4.994090979063748,
+            "init_detuning": 3.8505043698349146,
+            "final_detuning": 2.2588722894705633
         }
     }
 }
