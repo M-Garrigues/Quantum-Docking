@@ -12,7 +12,7 @@ from scipy.optimize import minimize
 
 
 def get_cost(bitstring, G, penalty=10) -> float:
-    """Calculating the cost of a single configuaration of the graph"""
+    """Calculating the cost of a single configuration of the graph"""
     z = np.array(list(bitstring), dtype=int)
     A = np.array(nx.adjacency_matrix(G).todense())
 
@@ -33,8 +33,10 @@ def func_complex(param, *args) -> float:
     """Cost function to minimize in VQAA"""
     G = args[0][0]
     register = args[0][1]
+    penalty_term = args[0][2]
+
     C = complex_quantum_loop(param, register)
-    cost = get_avg_cost(C, G, args[0][2])
+    cost = get_avg_cost(C, G, penalty_term)
 
     return cost
 
@@ -214,6 +216,7 @@ def VQAA(
     scores = []
     params = []
     testing = []
+
     for repetition in range(repetitions):
         testing.append(repetition)
         random_omega = np.random.uniform(omega_range[0], omega_range[1])

@@ -1,7 +1,11 @@
+cython==0.29.37
+hyperopt
 matplotlib
 networkx
 numpy
 openqaoa-qiskit
 pulser
+pytorch
+ray
 rdkit
 scipy
