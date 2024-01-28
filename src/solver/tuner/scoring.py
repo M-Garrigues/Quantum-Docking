@@ -1,6 +1,6 @@
 from collections import Counter
 from dataclasses import asdict, dataclass
-from typing import Self
+from typing import Self  # type: ignore
 
 import networkx as nx
 import numpy as np
@@ -62,18 +62,18 @@ def _gini(counts: Counter) -> float:
     return g
 
 
-def _is_independent_set(bitstring: np.ndarray, graph: nx.Graph) -> bool:
+def _is_independent_set(bitstring: str, graph: nx.Graph) -> bool:
     selected_nodes = [node for node, bit in enumerate(bitstring) if bit == "1"]
     return len(graph.subgraph(selected_nodes).edges) == 0
 
 
-def _get_configuration_score(configuration: np.ndarray, graph: nx.graph) -> int:
-    bitstring = np.array(list(configuration), dtype=int)
-
-    if not _is_independent_set(bitstring, graph):
+def _get_configuration_score(configuration: str, graph: nx.graph) -> int:
+    if not _is_independent_set(configuration, graph):
         return 0
 
-    return sum(bitstring)
+    total = sum([int(bit) for bit in configuration])
+
+    return total
 
 
 def _sum_score(counts: dict, graph: nx.Graph) -> float:
