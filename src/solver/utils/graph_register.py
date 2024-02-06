@@ -8,6 +8,8 @@ import pulser
 from pulser.devices import Chadoq2
 from scipy.spatial import KDTree
 
+from src.solver.classical import get_mis
+
 
 class GraphRegister(pulser.Register):
     """Extension of Pulser's Register object to deal with classical graphs.
@@ -169,3 +171,49 @@ def generate_multiple_configurations(folder: str, max_qubits: int = 14) -> None:
                 register.to_json_file(
                     os.path.join(folder, f"{str(nb_qubits)}_triangle_{l}_{spacing}.json"),
                 )
+
+
+def get_file(file_path) -> dict:
+    """Load a json file as dict."""
+    with open(file_path) as f:
+        json_config = json.load(f)
+    return json_config
+
+
+def set_edges(folder_path: str) -> None:
+    """Updates registers files in place by adding the edges of their corresponding graph."""
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
+        register = GraphRegister.from_json(file_path)
+
+        graph = register.graph
+        edges = graph.edges
+        mis = get_mis(graph)
+
+        file_dict = get_file(file_path)
+        file_dict["edges"] = [e for e in edges]
+        file_dict["metadata"]["mis"] = mis
+        file_dict["metadata"]["mis_size"] = len(mis[0])
+
+        with open(file_path, mode="w") as f:
+            f.write(json.dumps(file_dict, indent=4))
+
+
+def set_normalized_scores(folder_path: str) -> None:
+    """Normalizes the existing score in the registers files.
+    The normalization is done by dividing by the size of the found MIS."""
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
+        file_dict = get_file(file_path)
+
+        score = file_dict["metadata"]["score"]
+        mis_size = file_dict["metadata"]["mis_size"]
+
+        new_total = score["total"] / mis_size
+        new_sum_score = score["sum_score"] / mis_size
+
+        file_dict["metadata"]["score"]["total_normalized"] = new_total
+        file_dict["metadata"]["score"]["sum_normalized"] = new_sum_score
+
+        with open(file_path, mode="w") as f:
+            f.write(json.dumps(file_dict, indent=4))

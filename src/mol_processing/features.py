@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from rdkit.Chem.rdMolChemicalFeatures import MolChemicalFeature
 
-from config.general import SELECTED_FEATURES
+from src.config.general import SELECTED_FEATURES
 
 
 @dataclass(init=True)

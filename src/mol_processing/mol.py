@@ -2,8 +2,8 @@
 
 from rdkit.Chem import ChemicalFeatures, Mol
 
-from config.general import SELECTED_FEATURES
-from mol_processing.features import Feature
+from src.config.general import SELECTED_FEATURES
+from src.mol_processing.features import Feature
 
 
 def get_features(mol: Mol, mol_id: str) -> list[Feature]:
@@ -16,7 +16,7 @@ def get_features(mol: Mol, mol_id: str) -> list[Feature]:
     Returns:
         list[Feature]: List of all features selected.
     """
-    FACTORY = ChemicalFeatures.BuildFeatureFactory("../data/BaseFeatures.fdef")
+    FACTORY = ChemicalFeatures.BuildFeatureFactory("data/BaseFeatures.fdef")
     features = []
     positions = set()
     for family in SELECTED_FEATURES.keys():

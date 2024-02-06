@@ -8,8 +8,8 @@ from scipy.optimize import minimize
 from scipy.spatial import KDTree
 from scipy.spatial.distance import pdist, squareform
 
-from graph.interaction_graph import InteractionNode
-from mol_processing.features import find_feature_by_name
+from src.graph.interaction_graph import InteractionNode
+from src.mol_processing.features import find_feature_by_name
 
 
 def build_complementary_graph(G: nx.graph) -> nx.graph:
@@ -91,12 +91,12 @@ def add_quantum_link(G: nx.graph, node_A: str, node_B: str, chain_size: int = 1)
 
 def demo_positions(G: nx.graph) -> dict:
     return {
-        "H28-d6": (-4.2, 16.3),
-        "H12-d6": (-3.3, 4.6),
-        "H30-d6": (6.4, 11.2),
-        "H12-d8": (-0.1, -6.8),
-        "H30-d8": (11.7, -7.3),
-        "H28-d8": (5.3, -17.3),
+        "D0-d0": (-4.2, 16.3),
+        "D0-a0": (-3.3, 4.6),
+        "D0-n0": (6.4, 11.2),
+        "D1-a0": (-0.1, -6.8),
+        "D1-n0": (11.7, -7.3),
+        "D1-d0": (5.3, -17.3),
         "LINK-0": (14, 8),
         "LINK-1": (15, 0),
     }
@@ -104,7 +104,6 @@ def demo_positions(G: nx.graph) -> dict:
 
 def embed_to_register(positions: dict) -> Register:
     """Creates a register from a dict of nodes and there position."""
-    # qubits = {node.name: position for node, position in positions.items()}
     return Register(positions)
 
 

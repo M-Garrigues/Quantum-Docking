@@ -28,9 +28,9 @@ def optimise_QAA_parameters(
         gpus_per_trial (int, optional): No of gpu used for one trial. Defaults to 1.
     """
     config = {
-        "rise_time": tune.randint(16, (global_conf.MAX_COHERENCE_TIME - 16) / 2),
-        "fall_time": tune.randint(16, (global_conf.MAX_COHERENCE_TIME - 16) / 2),
-        "omega": tune.uniform(0, 5),
+        "rise_time": tune.randint(16, (global_conf.MAX_COHERENCE_TIME - 16) / (3)),
+        "fall_time": tune.randint(16, (global_conf.MAX_COHERENCE_TIME - 16) / (3 / 2)),
+        "omega": tune.uniform(0, 15),
         "init_detuning": tune.uniform(1, 8),
         "final_detuning": tune.uniform(0, 8),
     }
