@@ -4,11 +4,11 @@ from dataclasses import dataclass
 
 import networkx as nx
 
-from config.general import FLEXIBILITY_CONSTANT_TAU, INTERACTION_DISTANCE_EPSILON
-from config.potentials import POTENTIAL_FUNCTION
-from mol_processing.features import Feature
-from utils.dataclasses import OrderedTupleDict
-from utils.distances import euclidean_distance
+from src.config.general import FLEXIBILITY_CONSTANT_TAU, INTERACTION_DISTANCE_EPSILON
+from src.config.potentials import POTENTIAL_FUNCTION
+from src.mol_processing.features import Feature
+from src.utils.dataclasses import OrderedTupleDict
+from src.utils.distances import euclidean_distance
 
 
 @dataclass

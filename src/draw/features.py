@@ -2,10 +2,10 @@ import copy
 
 import matplotlib.pyplot as plt
 
-from graph.interaction_graph import InteractionNode
-from graph.mapping import results_to_interaction_graph_cliques
-from mol_processing.features import Feature
-from utils.dataclasses import OrderedTupleDict
+from src.graph.interaction_graph import InteractionNode
+from src.graph.mapping import results_to_interaction_graph_cliques
+from src.mol_processing.features import Feature
+from src.utils.dataclasses import OrderedTupleDict
 
 
 def get_skeleton_edges(features: list[Feature], distance_matrix: OrderedTupleDict) -> list[tuple]:
