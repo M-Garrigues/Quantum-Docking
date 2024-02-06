@@ -15,16 +15,35 @@
     },
     "metadata": {
         "score": {
-            "total": 1.4775505199999999,
-            "gini_score": 0.7998,
-            "sum_score": 1.8474
+            "total": 1.46770592,
+            "gini_score": 0.81035,
+            "sum_score": 1.8112,
+            "total_normalized": 0.73385296,
+            "sum_normalized": 0.9056
         },
         "params": {
-            "rise_time": 626,
-            "fall_time": 2523,
-            "omega": 7.280651867359316,
-            "init_detuning": 3.590511107656727,
-            "final_detuning": 4.800706313802921
-        }
-    }
+            "rise_time": 1205,
+            "fall_time": 2078,
+            "omega": 9.91842505900133,
+            "init_detuning": 7.43424818799514,
+            "final_detuning": 3.140296432217707
+        },
+        "mis": [
+            [
+                0,
+                2
+            ]
+        ],
+        "mis_size": 2
+    },
+    "edges": [
+        [
+            0,
+            1
+        ],
+        [
+            1,
+            2
+        ]
+    ]
 }

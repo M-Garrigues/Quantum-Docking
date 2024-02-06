@@ -1,0 +1,49 @@
+{
+    "qubits": {
+        "0": [
+            0.0,
+            -7.0
+        ],
+        "1": [
+            0.0,
+            0.0
+        ],
+        "2": [
+            0.0,
+            7.0
+        ]
+    },
+    "metadata": {
+        "score": {
+            "total": 1.51018848,
+            "gini_score": 0.77208,
+            "sum_score": 1.956,
+            "total_normalized": 0.75509424,
+            "sum_normalized": 0.978
+        },
+        "params": {
+            "rise_time": 903,
+            "fall_time": 823,
+            "omega": 11.380552783423777,
+            "init_detuning": 2.4845788558765287,
+            "final_detuning": 4.08824144453581
+        },
+        "mis": [
+            [
+                0,
+                2
+            ]
+        ],
+        "mis_size": 2
+    },
+    "edges": [
+        [
+            0,
+            1
+        ],
+        [
+            1,
+            2
+        ]
+    ]
+}

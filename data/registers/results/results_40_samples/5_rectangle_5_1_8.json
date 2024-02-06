@@ -25,7 +25,9 @@
         "score": {
             "total": 2.30027136,
             "gini_score": 0.86088,
-            "sum_score": 2.672
+            "sum_score": 2.672,
+            "total_normalized": 0.76675712,
+            "sum_normalized": 0.8906666666666667
         },
         "params": {
             "rise_time": 320,
@@ -33,6 +35,32 @@
             "omega": 10.07856323411402,
             "init_detuning": 4.2603495792045125,
             "final_detuning": 3.828708272313574
-        }
-    }
+        },
+        "mis": [
+            [
+                0,
+                2,
+                4
+            ]
+        ],
+        "mis_size": 3
+    },
+    "edges": [
+        [
+            0,
+            1
+        ],
+        [
+            1,
+            2
+        ],
+        [
+            2,
+            3
+        ],
+        [
+            3,
+            4
+        ]
+    ]
 }

@@ -19,16 +19,47 @@
     },
     "metadata": {
         "score": {
-            "total": 1.218870576,
-            "gini_score": 0.71304,
-            "sum_score": 1.7094
+            "total": 1.1998630000000001,
+            "gini_score": 0.7294,
+            "sum_score": 1.645,
+            "total_normalized": 0.5999315000000001,
+            "sum_normalized": 0.8225
         },
         "params": {
-            "rise_time": 1191,
-            "fall_time": 1531,
-            "omega": 4.9937142713732605,
-            "init_detuning": 1.022327099171249,
-            "final_detuning": 1.0958747985036434
-        }
-    }
+            "rise_time": 1022,
+            "fall_time": 3309,
+            "omega": 6.943117211062371,
+            "init_detuning": 4.474233595373537,
+            "final_detuning": 0.9521750512149132
+        },
+        "mis": [
+            [
+                0,
+                3
+            ],
+            [
+                1,
+                2
+            ]
+        ],
+        "mis_size": 2
+    },
+    "edges": [
+        [
+            0,
+            1
+        ],
+        [
+            0,
+            2
+        ],
+        [
+            1,
+            3
+        ],
+        [
+            2,
+            3
+        ]
+    ]
 }
