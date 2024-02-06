@@ -1,6 +1,6 @@
 # Towards molecular docking with neutral atoms
 
-By Mathieu GARRIGUES, Victor Onofre and Noé Bosc-Hadddad.
+By Mathieu GARRIGUES, Victor ONOFRE and Noé BOSC-HADDAD.
 
 ## Abstract
 
