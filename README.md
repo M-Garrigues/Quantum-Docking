@@ -1,8 +1,22 @@
-# Quantum-Docking
+# Towards molecular docking with neutral atoms
 
-As part of the Blaise Pascal's [Re]Generative Quantum Challenge, we attempt to use neutral atoms to simulate molecular docking.
+By Mathieu GARRIGUES, Victor Onofre and Noé Bosc-Hadddad.
 
-It features code to go from two molecule files to their binding interaction graph. It then has a quantum solver using VQAA to get the maximum clique out of the graph, representing the most probable binding conformations.
+## Abstract
+
+New computational strategies that can speed up the drug discovery process are emerging, such as molecular docking. This method predicts the activity of molecules at the binding site of proteins, helping to select the ones that exhibit desirable behavior and rejecting the rest. However, for large chemical libraries, it's essential to search and score configurations using fewer computational resources while maintaining high precision. 
+
+In this work, we map the molecular docking problem to a graph problem, a maximum-weight independent set problem on a unit-disk graph in a Physical Neutral Atom Quantum Processor. Here, each vertex represents an atom trapped by optical tweezers. The Variational Quantum Adiabatic Algorithm (VQAA) approach is used to solve the generic graph problem with two optimization methods, Scipy and Hyperopt. Additionally, a machine learning method is explored using the Adiabatic Algorithm. Results for multiple graphs are presented, and a small instance of the molecular docking problem is solved, demonstrating the potential for future near-term quantum applications.
+
+## Contributions
+
+In this work, we suggest adapting the Neutral Atoms VQAA algorithm to identify the Maximum Independent Set of a graph in the context of molecular docking. Furthermore, we propose an enhancement to this algorithm by leveraging a graph machine learning approach to significantly accelerate its computational efficiency.
+
+
+## Origin
+
+This work was originally sarted as part of the Blaise Pascal's [Re]Generative Quantum Challenge, in an attempt to use neutral atoms to simulate molecular docking.
+Following a 3rd place finish, we continued the work in order to make it complete.
 
 
 
@@ -19,8 +33,6 @@ To install the environment, run
 ```bash
 pip install -r requirements.txt
 ```
-
-
 
 
 ---
