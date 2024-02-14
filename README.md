@@ -19,6 +19,18 @@ This work was originally sarted as part of the Blaise Pascal's [Re]Generative Qu
 Following a 3rd place finish, we continued the work in order to make it complete.
 
 
+## Cite
+
+Please cite our work as:
+
+@misc{garrigues2024molecular,
+      title={Towards molecular docking with neutral atoms}, 
+      author={Mathieu Garrigues and Victor Onofre and Noé Bosc-Haddad},
+      year={2024},
+      eprint={2402.06770},
+      archivePrefix={arXiv},
+      primaryClass={quant-ph}
+}
 
 ---
 
