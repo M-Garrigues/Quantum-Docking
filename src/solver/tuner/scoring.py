@@ -1,9 +1,9 @@
 from collections import Counter
 from dataclasses import asdict, dataclass
-from typing import Self
 
 import networkx as nx
 import numpy as np
+from typing_extensions import Self
 
 import src.config.pulser as global_conf
 

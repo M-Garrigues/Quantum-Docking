@@ -1,12 +1,12 @@
 import json
 import os
 from math import sqrt
-from typing import Self
 
 import networkx as nx
 import pulser
 from pulser.devices import Chadoq2
 from scipy.spatial import KDTree
+from typing_extensions import Self
 
 
 class GraphRegister(pulser.Register):
