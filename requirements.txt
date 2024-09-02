@@ -1,11 +1,11 @@
-cython==0.29.37
+cython
 hyperopt
-matplotlib
+matplotlib<3.8
 networkx
 numpy
-openqaoa-qiskit
 pulser
 pytorch
 ray
 rdkit
-scipy
+scipy<1.13.0
+pmapper

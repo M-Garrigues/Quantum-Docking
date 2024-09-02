@@ -2,6 +2,7 @@
 
 from collections import Counter
 from dataclasses import dataclass
+import json
 
 from rdkit.Chem.rdMolChemicalFeatures import MolChemicalFeature
 
@@ -26,11 +27,21 @@ class FeatureFamily:
 class Feature:
     """Concentrates a feature's informations. Can be used directly as index in dictionnaries."""
 
-    def __init__(self, rd_feature: MolChemicalFeature, molecule_id: str) -> None:
+    def __init__(
+        self, family: FeatureFamily, position: tuple[float, float, float], molecule_id: str
+    ) -> None:
         self.__name: str | None = None
-        self.__family: FeatureFamily = FeatureFamily.from_family_name(rd_feature.GetFamily())
-        self.__position = rd_feature.GetPos()
+        self.__family: FeatureFamily = family
+        self.__position = position
         self.__molecule_id = molecule_id
+
+    @classmethod
+    def from_rdkit(cls, rd_feature: MolChemicalFeature, molecule_id: str):
+        return cls(
+            FeatureFamily.from_family_name(rd_feature.GetFamily()),
+            rd_feature.GetPos(),
+            molecule_id,
+        )
 
     @property
     def name(self) -> str | None:
@@ -49,7 +60,7 @@ class Feature:
         return self.__position
 
     def __hash__(self):
-        return hash((self.__name, self.__position, self.__molecule_id))
+        return hash((self.__name, self.__molecule_id))
 
     def __eq__(self, other):
         return (self.__name, self.__position) == (other.name, other.position)
@@ -92,6 +103,46 @@ def find_feature_by_name(name: str, features_list: list[Feature]) -> Feature | N
             return feat
 
     return None
+
+
+FAMILY_NAMES_CONVERSION = {
+    "a": "Aromatic",
+    "P": "PosIonizable",
+    "D": "Donor",
+    "A": "Acceptor",
+    "N": "NegIonizable",
+    "H": "Hydrophobe",
+}
+
+
+def load_features_from_pma_file(path: str, reversed=True) -> list[Feature]:
+
+    with open(path, "r") as f:
+        points_dict = json.loads(f.read())
+
+    points = points_dict["feature_coords"]
+    del points_dict
+
+    points = [
+        Feature(
+            FeatureFamily.from_family_name(FAMILY_NAMES_CONVERSION[point[0]]), point[1], "test"
+        )
+        for point in points
+    ]
+
+    known_positions = set()
+    final_features = []
+
+    if reversed:
+        points.reverse()
+
+    for feat in points:
+        if tuple(feat.position) in known_positions:
+            continue
+        known_positions.add(tuple(feat.position))
+        final_features.append(feat)
+
+    return final_features
 
 
 def spatial_selection(features_list: list[Feature], coordinates: list[tuple]) -> list[Feature]:

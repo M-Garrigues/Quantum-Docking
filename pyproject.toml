@@ -31,3 +31,24 @@ use_parentheses = true
 
 [tool.ruff]
 line-length = 100
+
+[tool.poetry]
+name = "quantum-docking"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+jupyter = "^1.0.0"
+networkx = "^3.3"
+scipy = "<1.13"
+pulser = "^0.19.0"
+rdkit = "^2024.3.5"
+pmapper = "^1.1.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

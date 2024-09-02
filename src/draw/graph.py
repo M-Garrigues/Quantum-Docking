@@ -1,5 +1,6 @@
 """Module for plotting the graphs."""
 
+import math
 import matplotlib.pyplot as plt
 import networkx as nx
 
@@ -19,7 +20,7 @@ def draw_interaction_graph(G: nx.Graph, highlight_nodes: list[str] | None = None
     pos = nx.spring_layout(G, scale=3, iterations=10, k=1, seed=seed)
 
     if any("weight" in G.nodes[node] for node in G.nodes):
-        nodes_size = [G.nodes[n]["weight"] * 1e4 for n in G.nodes()]
+        nodes_size = [math.sqrt(1 + G.nodes[n]["weight"]) * 1e3 for n in G.nodes()]
     else:
         nodes_size = [300 for _ in G.nodes()]
 

@@ -4,34 +4,35 @@ from typing import Final
 
 """ Interactions configuration """
 FLEXIBILITY_CONSTANT_TAU: Final[float] = 1
-INTERACTION_DISTANCE_EPSILON: Final[float] = 1
+INTERACTION_DISTANCE_EPSILON: Final[float] = 2
+print("taplcq")
 
 
 SELECTED_FEATURES: Final[dict] = {
-    "Donor": {"abbreviation": "d", "attractors": ["a", "h", "n", "p", "ar", "d"], "color": "blue"},
+    "Donor": {"abbreviation": "d", "attractors": ["a"], "color": "blue"},
     "Acceptor": {
         "abbreviation": "a",
-        "attractors": ["a", "h", "n", "p", "ar", "d"],
-        "color": "yellow",
+        "attractors": ["d"],
+        "color": "red",
     },
     "NegIonizable": {
         "abbreviation": "n",
-        "attractors": ["a", "h", "n", "p", "ar", "d"],
-        "color": "red",
+        "attractors": ["p"],
+        "color": "yellow",
     },
     "PosIonizable": {
         "abbreviation": "p",
-        "attractors": ["a", "h", "n", "p", "ar", "d"],
+        "attractors": ["n"],
         "color": "green",
     },
     "Aromatic": {
         "abbreviation": "ar",
-        " attractors": ["a", "h", "n", "p", "ar", "d"],
+        "attractors": ["ar"],
         "color": "orange",
     },
     "Hydrophobe": {
         "abbreviation": "h",
-        "attractors": ["a", "h", "n", "p", "ar", "d"],
+        "attractors": ["h"],
         "color": "purple",
     },
 }

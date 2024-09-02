@@ -1,6 +1,7 @@
 """Module containing all the functions needed to build a binding interaction graph."""
 
 from dataclasses import dataclass
+import itertools
 
 import networkx as nx
 
@@ -42,10 +43,40 @@ def build_distance_matrix(
     distance_matrix: OrderedTupleDict[float] = OrderedTupleDict()
 
     for i, feat_1 in enumerate(features):
-        for feat_2 in features[i + 1 :]:
+        for feat_2 in features[i:]:
             distance_matrix[feat_1, feat_2] = euclidean_distance(feat_1.position, feat_2.position)
 
     return distance_matrix
+
+
+def filter_receptor_features_close_to_ligand(
+    L_features: list[Feature], R_features: list[Feature], max_distance: float = 4
+) -> tuple[set[Feature], set[Feature]]:
+    selected_L_features = set()
+    selected_R_features = set()
+
+    L_positions = [feat.position for feat in L_features]
+
+    R_features = [feat for feat in R_features if feat.position not in L_positions]
+
+    for L_feat in L_features:
+        for R_feat in R_features:
+
+            distance = euclidean_distance(L_feat.position, R_feat.position)
+
+            if distance < max_distance and features_are_attracted(L_feat, R_feat) and distance > 0:
+
+                print(
+                    L_feat,
+                    R_feat,
+                    euclidean_distance(L_feat.position, R_feat.position),
+                    L_feat.position,
+                    R_feat.position,
+                )
+                selected_L_features.add(L_feat)
+                selected_R_features.add(R_feat)
+
+    return selected_L_features, selected_R_features
 
 
 def pairs_distances_match(L_features_distance: float, R_features_distance: float) -> bool:
@@ -161,9 +192,9 @@ def build_binding_interaction_graph(
     Returns:
         nx.Graph: Full binding graph object.
     """
-    possible_edges: list[
-        tuple[tuple[Feature, Feature], tuple[Feature, Feature]]
-    ] = []  # list[((Feature_L_a, Feature_R_x), (Feature_L_b, Feature_R_y))]
+    possible_edges: list[tuple[tuple[Feature, Feature], tuple[Feature, Feature]]] = (
+        []
+    )  # list[((Feature_L_a, Feature_R_x), (Feature_L_b, Feature_R_y))]
 
     for L_pair, L_distance in L_distance_matrix.items():
         for R_pair, R_distance in R_distance_matrix.items():
@@ -189,8 +220,46 @@ def build_binding_interaction_graph(
                 ),
             )
 
+        if len(edge_nodes) == 1:  # The nodes are both the same. Avoids self loop in the graph.
+            continue
+
         edges.add(tuple(edge_nodes))  # type: ignore
         nodes.update(edge_nodes)
+
+    return build_nx_weighted_graph(edges, nodes)
+
+
+def build_weighted_binding_interaction_graph(
+    L_features,
+    R_features,
+    L_distance_matrix: OrderedTupleDict[float],
+    R_distance_matrix: OrderedTupleDict[float],
+) -> nx.Graph:
+
+    nodes = [
+        InteractionNode(
+            L_feature=L_feat,
+            R_feature=R_feat,
+            weight=POTENTIAL_FUNCTION[
+                L_feat.family.abbreviation,
+                R_feat.family.abbreviation,
+            ],
+        )
+        for L_feat, R_feat in itertools.product(L_features, R_features)
+    ]
+
+    edges: set[tuple[InteractionNode, InteractionNode]] = set()
+
+    for i, node_a in enumerate(nodes):
+        for node_b in nodes[i + 1 :]:
+
+            L_distance = L_distance_matrix[node_a.L_feature, node_b.L_feature]
+            R_distance = R_distance_matrix[node_a.R_feature, node_b.R_feature]
+
+            print(L_distance, R_distance, node_a, node_b)
+
+            if pairs_distances_match(L_distance, R_distance):
+                edges.add((node_a, node_b))
 
     return build_nx_weighted_graph(edges, nodes)
 
