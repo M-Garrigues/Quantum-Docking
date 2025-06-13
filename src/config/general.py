@@ -3,7 +3,7 @@
 from typing import Final
 
 """ Interactions configuration """
-FLEXIBILITY_CONSTANT_TAU: Final[float] = 1
+FLEXIBILITY_CONSTANT_TAU: Final[float] = 0
 INTERACTION_DISTANCE_EPSILON: Final[float] = 2
 print("taplcq")
 

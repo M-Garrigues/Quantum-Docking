@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"><key id="d0" for="node" attr.name="weight" attr.type="double"/>
+<graph edgedefault="undirected"><node id="AR0-d237">
+  <data key="d0">0.1091</data>
+</node>
+<node id="D0-d237">
+  <data key="d0">0.5244</data>
+</node>
+<node id="A0-d237">
+  <data key="d0">0.6686</data>
+</node>
+<node id="A1-d237">
+  <data key="d0">0.6686</data>
+</node>
+<node id="A2-d237">
+  <data key="d0">0.6686</data>
+</node>
+<node id="H0-d237">
+  <data key="d0">0.1453</data>
+</node>
+<node id="H1-d237">
+  <data key="d0">0.1453</data>
+</node>
+<edge source="AR0-d237" target="D0-d237"/>
+<edge source="AR0-d237" target="H1-d237"/>
+<edge source="D0-d237" target="A0-d237"/>
+<edge source="D0-d237" target="A2-d237"/>
+<edge source="D0-d237" target="H0-d237"/>
+<edge source="D0-d237" target="H1-d237"/>
+<edge source="A0-d237" target="A2-d237"/>
+<edge source="A0-d237" target="H0-d237"/>
+<edge source="A0-d237" target="H1-d237"/>
+<edge source="A1-d237" target="A2-d237"/>
+<edge source="A1-d237" target="H0-d237"/>
+<edge source="A1-d237" target="H1-d237"/>
+</graph></graphml>

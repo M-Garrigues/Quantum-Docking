@@ -135,3 +135,330 @@ def draw_multiple_dockings(
 
     for clique in nodes_cliques:
         draw_docking(L_features, L_distance_matrix, R_features, R_distance_matrix, clique)
+
+
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D, proj3d
+import numpy as np
+from matplotlib.lines import Line2D
+
+
+class Interactive3DPlotter:
+    def __init__(self, ligand_points, receptor_points, contact_list):
+        self.ligand_points_data = ligand_points
+        self.receptor_points_data = receptor_points
+        self.contact_list = contact_list
+
+        self.fig = plt.figure(figsize=(14, 12))
+        self.ax = self.fig.add_subplot(111, projection="3d")
+
+        self.lig_scatter_artist = None
+        self.rec_scatter_artist = None
+        self.contact_circles_scatter_artist = None
+
+        self.lig_coords_3d = None
+        self.rec_coords_3d = None
+        self.contacted_rec_coords_3d = None
+
+        self.S_MIN_SIZE = 20.0
+        self.S_MAX_SIZE = 150.0  # Increased max size for better visual effect
+        self.TEXT_OFFSET_FACTOR = 0.03  # Slightly increased for larger points
+
+        self._is_updating_sizes = False
+        self._plot_all_elements()
+        self.event_connection_id = self.fig.canvas.mpl_connect("draw_event", self._on_draw_event)
+
+        # Debug: Print initial camera state
+        # print(f"Initial view: elev={self.ax.elev:.1f}, azim={self.ax.azim:.1f}, dist={self.ax.dist:.1f}")
+
+    def _get_text_offset(self):
+        all_coords = []
+        if self.ligand_points_data:
+            all_coords.extend(p.position for p in self.ligand_points_data)
+        if self.receptor_points_data:
+            all_coords.extend(p.position for p in self.receptor_points_data)
+        if not all_coords:
+            return 0.1
+
+        all_coords_np = np.array(all_coords)
+        ranges = np.ptp(all_coords_np, axis=0)
+        avg_range = np.mean(ranges[ranges > 0]) if np.any(ranges > 0) else 1.0
+        return self.TEXT_OFFSET_FACTOR * avg_range
+
+    def _calculate_initial_sizes(self, points_3d_coords):
+        if points_3d_coords is None or points_3d_coords.shape[0] == 0:
+            return np.array([])
+
+        # Initial sizing uses data Z, assuming larger data Z might be "further" initially
+        # This is mostly a placeholder until the first dynamic update.
+        z_coords_data = points_3d_coords[:, 2]
+        if not z_coords_data.size:
+            return np.array([(self.S_MIN_SIZE + self.S_MAX_SIZE) / 2.0] * len(points_3d_coords))
+
+        z_min_data, z_max_data = np.min(z_coords_data), np.max(z_coords_data)
+        z_range_data = z_max_data - z_min_data
+
+        sizes = []
+        for z_val in z_coords_data:
+            if z_range_data > 1e-6:
+                normalized_z_data = (z_val - z_min_data) / z_range_data
+                size = self.S_MIN_SIZE + normalized_z_data * (self.S_MAX_SIZE - self.S_MIN_SIZE)
+            else:
+                size = (self.S_MIN_SIZE + self.S_MAX_SIZE) / 2.0
+            sizes.append(size)
+        return np.array(sizes)
+
+    def _plot_all_elements(self):
+        text_offset = self._get_text_offset()
+        ligand_points_map = {p.name: p for p in self.ligand_points_data}
+        receptor_points_map = {p.name: p for p in self.receptor_points_data}
+
+        if self.ligand_points_data:
+            self.lig_coords_3d = np.array([p.position for p in self.ligand_points_data])
+            initial_lig_sizes = self._calculate_initial_sizes(self.lig_coords_3d)  # Temporary
+            self.lig_scatter_artist = self.ax.scatter(
+                self.lig_coords_3d[:, 0],
+                self.lig_coords_3d[:, 1],
+                self.lig_coords_3d[:, 2],
+                c="blue",
+                s=initial_lig_sizes,
+                label="Ligand Points",
+                depthshade=True,
+            )
+            default_lig_label_color = "black"
+            for i, p_obj in enumerate(self.ligand_points_data):
+                label_color = default_lig_label_color
+                if p_obj.family and hasattr(p_obj.family, "color"):
+                    label_color = p_obj.family.color
+                self.ax.text(
+                    self.lig_coords_3d[i, 0] + text_offset,
+                    self.lig_coords_3d[i, 1] + text_offset,
+                    self.lig_coords_3d[i, 2],
+                    p_obj.name,
+                    color=label_color,
+                    fontsize=9,
+                )
+
+        if self.receptor_points_data:
+            self.rec_coords_3d = np.array([p.position for p in self.receptor_points_data])
+            initial_rec_sizes = self._calculate_initial_sizes(self.rec_coords_3d)  # Temporary
+            self.rec_scatter_artist = self.ax.scatter(
+                self.rec_coords_3d[:, 0],
+                self.rec_coords_3d[:, 1],
+                self.rec_coords_3d[:, 2],
+                c="red",
+                s=initial_rec_sizes,
+                alpha=0.7,
+                label="Receptor Points",
+                depthshade=True,
+            )
+            for i, p_obj in enumerate(self.receptor_points_data):
+                self.ax.text(
+                    self.rec_coords_3d[i, 0] + text_offset,
+                    self.rec_coords_3d[i, 1] + text_offset,
+                    self.rec_coords_3d[i, 2],
+                    p_obj.name,
+                    color=p_obj.family.color,
+                    fontsize=9,
+                )
+
+        contacted_receptor_point_objects = set()
+        if self.contact_list:
+            for contact_str in self.contact_list:
+                try:
+                    lig_name, rec_name = contact_str.split("-", 1)
+                except ValueError:
+                    continue
+                lig_point = ligand_points_map.get(lig_name)
+                rec_point = receptor_points_map.get(rec_name)
+                if lig_point and rec_point:
+                    self.ax.plot(
+                        [lig_point.position[0], rec_point.position[0]],
+                        [lig_point.position[1], rec_point.position[1]],
+                        [lig_point.position[2], rec_point.position[2]],
+                        linestyle="--",
+                        color="green",
+                        linewidth=1.5,
+                        label="_nolegend_",
+                    )
+                    contacted_receptor_point_objects.add(rec_point)
+
+        if contacted_receptor_point_objects:
+            self.contacted_rec_coords_3d = np.array(
+                [p.position for p in contacted_receptor_point_objects]
+            )
+            if self.contacted_rec_coords_3d.shape[0] > 0:
+                initial_contact_point_sizes = self._calculate_initial_sizes(
+                    self.contacted_rec_coords_3d
+                )  # Temporary
+                initial_ring_sizes = [
+                    max(self.S_MAX_SIZE * 1.5, s_pt * 2.0) for s_pt in initial_contact_point_sizes
+                ]
+                self.contact_circles_scatter_artist = self.ax.scatter(
+                    self.contacted_rec_coords_3d[:, 0],
+                    self.contacted_rec_coords_3d[:, 1],
+                    self.contacted_rec_coords_3d[:, 2],
+                    s=np.array(initial_ring_sizes),
+                    facecolors="none",
+                    edgecolors="green",
+                    linewidth=2,
+                    alpha=0.9,
+                    label="_nolegend_",
+                )
+
+        self.ax.set_xlabel("X coordinate")
+        self.ax.set_ylabel("Y coordinate")
+        self.ax.set_zlabel("Z coordinate")
+        self.ax.set_title("Interactive 3D Visualization (Sizes Update with View)")
+        self._update_legend()
+        # Force an initial draw to trigger _on_draw_event for correct initial sizes
+        self.fig.canvas.draw_idle()
+
+    def _update_legend(self):
+        handles, labels = self.ax.get_legend_handles_labels()
+        filtered_handles_labels = [(h, l) for h, l in zip(handles, labels) if l != "_nolegend_"]
+        by_label = dict(filtered_handles_labels)
+        has_contacts = any(
+            isinstance(c, str)
+            and "-" in c
+            and {p.name: p for p in self.ligand_points_data}.get(c.split("-", 1)[0])
+            and {p.name: p for p in self.receptor_points_data}.get(
+                c.split("-", 1)[1] if len(c.split("-", 1)) > 1 else None
+            )
+            for c in self.contact_list
+        )
+        if has_contacts and "Contact Line" not in by_label:
+            by_label["Contact Line"] = Line2D(
+                [0], [0], linestyle="--", color="green", linewidth=1.5
+            )
+        if (
+            self.contacted_rec_coords_3d is not None
+            and self.contacted_rec_coords_3d.shape[0] > 0
+            and "Contacted Receptor" not in by_label
+        ):
+            by_label["Contacted Receptor"] = Line2D(
+                [0],
+                [0],
+                linestyle="none",
+                marker="o",
+                markersize=10,
+                markerfacecolor="none",
+                markeredgecolor="green",
+                markeredgewidth=2,
+            )
+        current_legend = self.ax.get_legend()
+        if current_legend:
+            current_legend.remove()
+        if by_label:
+            self.ax.legend(by_label.values(), by_label.keys())
+
+    def _get_dynamic_sizes_for_view(self, points_3d_coords_original):
+        if (
+            self.ax.M is None
+            or points_3d_coords_original is None
+            or points_3d_coords_original.shape[0] == 0
+        ):
+            return np.array([])
+
+        try:
+            x_disp, y_disp, z_view = proj3d.proj_transform(
+                points_3d_coords_original[:, 0],
+                points_3d_coords_original[:, 1],
+                points_3d_coords_original[:, 2],
+                self.ax.M,
+            )
+        except Exception as e:
+            # print(f"Error in proj_transform: {e}") # Debug
+            return self._calculate_initial_sizes(points_3d_coords_original)  # Fallback
+
+        if not z_view.size:
+            return np.array([])
+
+        # --- Key change in interpretation ---
+        # Hypothesis: LARGER z_view values are CLOSER to the camera.
+        #             SMALLER z_view values are FURTHER from the camera.
+
+        z_view_min, z_view_max = np.min(z_view), np.max(z_view)
+        z_view_range = z_view_max - z_view_min
+
+        # --- Diagnostic prints (uncomment to debug) ---
+        # if points_3d_coords_original is self.lig_coords_3d: # Print only for one set of points
+        #     print(f"View: elev={self.ax.elev:.1f}, azim={self.ax.azim:.1f}, dist={self.ax.dist:.1f}")
+        #     print(f"z_view range: {z_view_min:.3f} to {z_view_max:.3f} (range: {z_view_range:.3f})")
+        #     if z_view.size > 0:
+        #         idx_closest_visual = np.argmax(z_view) # Index of point with largest z_view
+        #         idx_furthest_visual = np.argmin(z_view) # Index of point with smallest z_view
+        #         print(f"  Point with max z_view ({z_view[idx_closest_visual]:.3f}) should be largest.")
+        #         print(f"  Point with min z_view ({z_view[idx_furthest_visual]:.3f}) should be smallest.")
+
+        new_sizes = []
+        for i, z_v in enumerate(z_view):
+            if z_view_range > 1e-9:
+                # Normalized_z_v: 0 for z_view_min (furthest), 1 for z_view_max (closest)
+                normalized_z_v = (z_v - z_view_min) / z_view_range
+
+                # Size: S_MIN_SIZE for norm=0 (furthest), S_MAX_SIZE for norm=1 (closest)
+                size = self.S_MIN_SIZE + normalized_z_v * (self.S_MAX_SIZE - self.S_MIN_SIZE)
+            else:
+                size = (self.S_MIN_SIZE + self.S_MAX_SIZE) / 2.0
+            new_sizes.append(max(1.0, size))  # Ensure a minimum positive size
+
+            # --- Diagnostic print for a specific point (e.g., first ligand point) ---
+            # if points_3d_coords_original is self.lig_coords_3d and i == 0:
+            #     print(f"  LIG0: z_orig={points_3d_coords_original[i,2]:.2f}, z_view={z_v:.3f}, norm_z_v={normalized_z_v:.3f}, size={size:.1f}")
+
+        return np.array(new_sizes)
+
+    def _on_draw_event(self, event):
+        if self._is_updating_sizes:
+            return
+        self._is_updating_sizes = True
+        try:
+            if self.lig_scatter_artist and self.lig_coords_3d is not None:
+                new_lig_sizes = self._get_dynamic_sizes_for_view(self.lig_coords_3d)
+                if new_lig_sizes.size > 0:
+                    self.lig_scatter_artist.set_sizes(new_lig_sizes)
+
+            if self.rec_scatter_artist and self.rec_coords_3d is not None:
+                new_rec_sizes = self._get_dynamic_sizes_for_view(self.rec_coords_3d)
+                if new_rec_sizes.size > 0:
+                    self.rec_scatter_artist.set_sizes(new_rec_sizes)
+
+            if self.contact_circles_scatter_artist and self.contacted_rec_coords_3d is not None:
+                underlying_point_dynamic_sizes = self._get_dynamic_sizes_for_view(
+                    self.contacted_rec_coords_3d
+                )
+                if underlying_point_dynamic_sizes.size > 0:
+                    new_ring_sizes = [
+                        max(self.S_MAX_SIZE * 1.2, s_pt * 1.8)
+                        for s_pt in underlying_point_dynamic_sizes
+                    ]  # Adjusted ring size logic
+                    self.contact_circles_scatter_artist.set_sizes(np.array(new_ring_sizes))
+        finally:
+            self._is_updating_sizes = False
+
+    def show(self):
+        plt.tight_layout()
+        plt.show()
+
+    def __del__(self):
+        if (
+            hasattr(self, "event_connection_id")
+            and self.event_connection_id is not None
+            and self.fig.canvas
+        ):
+            try:
+                self.fig.canvas.mpl_disconnect(self.event_connection_id)
+            except Exception:
+                pass
+
+
+def plot_3d_features_with_contacts(ligand_points, receptor_points, contact_list):
+    """
+    Main function to create and show the interactive 3D plot.
+    The plotter object is returned in case it needs to be kept alive (e.g., in Jupyter).
+    """
+    plotter = Interactive3DPlotter(ligand_points, receptor_points, contact_list)
+    # plotter.show() # show() is blocking, so Interactive3DPlotter should manage this
+    # The show() is called by the main script or Jupyter. The object must persist.
+    return plotter

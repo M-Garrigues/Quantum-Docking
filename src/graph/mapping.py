@@ -12,9 +12,15 @@ from src.graph.interaction_graph import InteractionNode
 from src.mol_processing.features import find_feature_by_name
 
 
-def build_complementary_graph(G: nx.graph) -> nx.graph:
+def build_complementary_graph(graph: nx.graph) -> nx.graph:
     """Returns the complementary graph of the given graph."""
-    return nx.complement(G)
+    complement_graph = nx.complement(graph)
+
+    for node in complement_graph.nodes():
+        if node in graph.nodes:
+            complement_graph.nodes[node]["weight"] = graph.nodes[node]["weight"]
+
+    return complement_graph
 
 
 def _evaluate_mapping(new_coords, *args):

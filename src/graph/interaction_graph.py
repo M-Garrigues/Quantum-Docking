@@ -66,13 +66,6 @@ def filter_receptor_features_close_to_ligand(
 
             if distance < max_distance and features_are_attracted(L_feat, R_feat) and distance > 0:
 
-                print(
-                    L_feat,
-                    R_feat,
-                    euclidean_distance(L_feat.position, R_feat.position),
-                    L_feat.position,
-                    R_feat.position,
-                )
                 selected_L_features.add(L_feat)
                 selected_R_features.add(R_feat)
 
@@ -256,7 +249,6 @@ def build_weighted_binding_interaction_graph(
             L_distance = L_distance_matrix[node_a.L_feature, node_b.L_feature]
             R_distance = R_distance_matrix[node_a.R_feature, node_b.R_feature]
 
-            print(L_distance, R_distance, node_a, node_b)
 
             if pairs_distances_match(L_distance, R_distance):
                 edges.add((node_a, node_b))

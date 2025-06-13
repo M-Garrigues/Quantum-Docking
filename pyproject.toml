@@ -4,7 +4,7 @@ version = "0.0.1"
 authors = [{ name="Noé Bosc-Haddad", email="noe.bosc.haddad@gmail.com"}, {name="Mathieu Garrigues", email="mathieu.garigues@gmail.com"}, {name="Victor Onofre", email="vonofre68@gmail.com"},]
 description = "As part of the Blaise Pascal's [Re]Generative Quantum Challenge, we attempt to use neutral atoms to speed up molecular docking."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 classifiers = ["Programming Language :: Python :: 3",
     "License :: MIT License",
     "Operating System :: OS Independent",
@@ -42,11 +42,18 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 jupyter = "^1.0.0"
-networkx = "^3.3"
+networkx = "2.8.8"
 scipy = "<1.13"
 pulser = "^0.19.0"
-rdkit = "^2024.3.5"
+rdkit = "2023.09.2"
 pmapper = "^1.1.1"
+lxml = "^5.3.0"
+ipympl = "^0.9.7"
+py3dmol = "^2.5.0"
+mordred = "^1.2.0"
+tk = "^0.1.0"
+pyvista = "^0.45.2"
+biopython = "^1.85"
 
 
 [build-system]
