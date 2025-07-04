@@ -7,6 +7,126 @@ from src.graph.mapping import results_to_interaction_graph_cliques
 from src.mol_processing.features import Feature
 from src.utils.dataclasses import OrderedTupleDict
 
+from rdkit import Chem
+from rdkit.Chem import AllChem, ChemicalFeatures
+from rdkit.Chem.ChemicalFeatures import MolChemicalFeature
+from rdkit import RDConfig
+import numpy as np
+import os
+from enum import Enum
+import py3Dmol
+from typing import Sequence
+
+
+def show_molecule_with_features(molecule: Chem.Mol, features: list[Feature]) -> py3Dmol.view:
+    """
+    Displays a molecule with its pharmacophore features as colored spheres.
+    The color is taken directly from the FeatureFamily object.
+    """
+    view = py3Dmol.view(width=600, height=500)
+    view.addModel(Chem.MolToMolBlock(molecule), "mol")
+    view.setStyle({}, {"stick": {}})
+
+    for feature in features:
+        # Get the color directly from the feature's family attribute
+        color = feature.family.color
+        pos = feature.position
+
+        view.addSphere(
+            {
+                "center": {"x": pos[0], "y": pos[1], "z": pos[2]},
+                "radius": 0.5,
+                "color": color,
+                "alpha": 0.8,
+            }
+        )
+        view.addLabel(
+            feature.name,
+            {
+                "position": {"x": pos[0], "y": pos[1], "z": pos[2]},
+                "fontColor": color,
+                "backgroundOpacity": 0.33,
+                "backgroundColor": "white",
+            },
+        )
+
+    view.zoomTo()
+    return view
+
+
+def visualize_docking_site(
+    receptor: Chem.Mol,
+    ligand: Chem.Mol,
+    receptor_features: Sequence[Feature],
+    ligand_features: Sequence[Feature],
+) -> None:
+    """
+    Visualizes a docking site with py3Dmol.
+
+    Displays receptor (cartoon style) and ligand (stick style),
+    shows chemical features as spheres colored by FeatureFamily.color,
+    fades receptor regions >20Å from ligand center, and centers zoom on ligand.
+
+    Args:
+        receptor, ligand: RDKit Mol objects with 3D conformers.
+        receptor_features: chemical features on receptor.
+        ligand_features: chemical features on ligand.
+
+    Raises:
+        ValueError: if either molecule lacks a 3D conformer.
+    """
+    if ligand.GetNumConformers() == 0 or receptor.GetNumConformers() == 0:
+        raise ValueError("Both receptor and ligand must have 3D conformers.")
+
+    # Compute ligand centroid
+    lconf = ligand.GetConformer()
+    l_coords = np.array([lconf.GetAtomPosition(i) for i in range(ligand.GetNumAtoms())])
+    l_center = np.mean(l_coords, axis=0)
+
+    # Distances of receptor atoms
+    rconf = receptor.GetConformer()
+    r_coords = np.array([rconf.GetAtomPosition(i) for i in range(receptor.GetNumAtoms())])
+    distances = np.linalg.norm(r_coords - l_center, axis=1)
+    close_serials = [i + 1 for i, d in enumerate(distances) if d <= 20.0]
+
+    # Convert to PDB blocks
+    receptor_block = AllChem.MolToPDBBlock(receptor)
+    ligand_block = AllChem.MolToPDBBlock(ligand)
+
+    # Initialize viewer
+    viewer = py3Dmol.view(width=800, height=600)
+    viewer.addModel(receptor_block, "pdb")
+    # Apply base style: transparent cartoon
+    viewer.setStyle({"model": 0}, {"cartoon": {"color": "grey", "opacity": 0.2}})
+    # Highlight close atoms with full opacity
+    viewer.setStyle({"model": 0, "serial": close_serials}, {"cartoon": {"opacity": 1.0}})
+
+    # Add ligand model
+    viewer.addModel(ligand_block, "pdb")
+    viewer.setStyle({"model": 1}, {"stick": {"radius": 0.2}})
+
+    # Add feature spheres
+    def add_spheres(features, model_idx):
+        for feat in features:
+            x, y, z = feat.position
+            viewer.addSphere(
+                {
+                    "center": {"x": x, "y": y, "z": z},
+                    "radius": 0.5,
+                    "color": feat.family.color,
+                    "alpha": 0.8,
+                    "model": model_idx,
+                }
+            )
+
+    add_spheres(receptor_features, 0)
+    add_spheres(ligand_features, 1)
+
+    # Center and zoom to ligand
+    viewer.zoomTo({"model": 1})
+    viewer.render()
+    viewer.show()
+
 
 def get_skeleton_edges(features: list[Feature], distance_matrix: OrderedTupleDict) -> list[tuple]:
     def _find_group(list_of_lists, element):

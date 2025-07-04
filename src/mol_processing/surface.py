@@ -53,7 +53,7 @@ def select_surface_features(
             raise ValueError("The input 'ligand' molecule must have a 3D conformer.")
         ligand_volume = AllChem.ComputeMolVolume(ligand, confId=-1, gridSpacing=0.2)
         if ligand_volume > 0:
-            probe_radius = (0.75 * ligand_volume / np.pi) ** (1 / 3.0)
+            probe_radius = (0.75 * ligand_volume / np.pi) ** (1 / 6.0)
             print(f"Probe radius calculated from ligand: {probe_radius:.2f} Å")
 
     # --- RDKIT -> BIOPYTHON BRIDGE ---
@@ -92,16 +92,28 @@ def select_surface_features(
     return surface_features
 
 
+import py3Dmol
+from rdkit import Chem
+from typing import List, Tuple, Optional
+
+
 def visualize_selection(
-    molecule: Chem.Mol, all_points: List[Feature], selected_points: List[Feature]
+    molecule: Chem.Mol,
+    all_points: List[Feature],
+    selected_points: List[Feature],
+    ligand: Optional[Chem.Mol] = None,
 ) -> py3Dmol.view:
     """
-    Visualizes the molecule and pharmacophore points in py3Dmol.
+    Visualizes the molecule, pharmacophore points, and an optional ligand.
+
+    If a ligand is provided, it is highlighted, the camera is focused on it,
+    and the main molecule (receptor) is made transparent.
 
     Args:
-        molecule: RDKit molecule with a 3D conformer.
+        molecule: RDKit molecule (receptor) with a 3D conformer.
         all_points: A list of all Feature objects to display.
         selected_points: A subset of Feature objects to highlight.
+        ligand: An optional RDKit ligand molecule with a 3D conformer.
 
     Returns:
         A py3Dmol.view instance containing the visualization.
@@ -110,10 +122,7 @@ def visualize_selection(
         tuple(p.position) for p in selected_points
     }
 
-    view = py3Dmol.view(width=600, height=400)
-    mol_block = Chem.MolToMolBlock(molecule)
-    view.addModel(mol_block, "mol")
-    view.setStyle({}, {"stick": {}, "sphere": {"scale": 0.2}})
+    view = py3Dmol.view(width=1200, height=900)
     view.setBackgroundColor("white")
 
     for p in all_points:
@@ -121,7 +130,6 @@ def visualize_selection(
         is_selected = pos in selected_positions
         color = "green" if is_selected else "red"
         radius = 0.5 if is_selected else 0.3
-
         view.addSphere(
             {
                 "center": {"x": pos[0], "y": pos[1], "z": pos[2]},
@@ -131,5 +139,21 @@ def visualize_selection(
             }
         )
 
-    view.zoomTo()
+    if ligand is not None:
+        receptor_block = Chem.MolToMolBlock(molecule)
+        view.addModel(receptor_block, "mol")
+        # view.setStyle({"model": 0}, {"cartoon": {"color": "lightgrey", "opacity": 0.6}})
+
+        ligand_block = Chem.MolToMolBlock(ligand)
+        view.addModel(ligand_block, "mol")
+        view.setStyle({"model": 1}, {"stick": {}})
+
+        view.zoomTo({"model": 1})
+
+    else:
+        mol_block = Chem.MolToMolBlock(molecule)
+        view.addModel(mol_block, "mol")
+        view.setStyle({}, {"stick": {}, "sphere": {"scale": 0.2}})
+        view.zoomTo()
+
     return view

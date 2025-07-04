@@ -5,9 +5,9 @@ import itertools
 
 import networkx as nx
 
-from src.config.general import FLEXIBILITY_CONSTANT_TAU, INTERACTION_DISTANCE_EPSILON
+from src.config.general import INTERACTION_DISTANCE_EPSILON
 from src.config.potentials import POTENTIAL_FUNCTION
-from src.mol_processing.features import Feature
+from src.mol_processing.features import Feature, MinMaxDistance
 from src.utils.dataclasses import OrderedTupleDict
 from src.utils.distances import euclidean_distance
 
@@ -51,13 +51,9 @@ def build_distance_matrix(
 
 def filter_receptor_features_close_to_ligand(
     L_features: list[Feature], R_features: list[Feature], max_distance: float = 4
-) -> tuple[set[Feature], set[Feature]]:
+) -> tuple[list[Feature], list[Feature]]:
     selected_L_features = set()
     selected_R_features = set()
-
-    L_positions = [feat.position for feat in L_features]
-
-    R_features = [feat for feat in R_features if feat.position not in L_positions]
 
     for L_feat in L_features:
         for R_feat in R_features:
@@ -69,24 +65,25 @@ def filter_receptor_features_close_to_ligand(
                 selected_L_features.add(L_feat)
                 selected_R_features.add(R_feat)
 
-    return selected_L_features, selected_R_features
+    return list(selected_L_features), list(selected_R_features)
 
 
-def pairs_distances_match(L_features_distance: float, R_features_distance: float) -> bool:
-    """Determines whether two features pairs in different molecules can interact with each other,
-       based on distance between features, the Tau elasticity parameter and the Epsilon
-       interaction distance parameter.
+def pairs_distances_match(L_feature_min_max: MinMaxDistance, R_features_distance: float) -> bool:
+    """Determines whether two features pairs in different molecules can simultaneously interact with
+        each other, based on distance between features, the variation of distance due to the ligand's
+        flexibility and the Epsilon interaction distance parameter.
 
     Args:
-        L_features_distance (float): Pair distance between features in ligand molecule.
+        L_feature_min_max (MinMaxDistance): Pair min/max distances between features in ligand molecule.
         R_features_distance (float): Pair distance between features in receptor molecule.
 
     Returns:
         bool: Wether the pairs can interact.
     """
     return (
-        abs(L_features_distance - R_features_distance)
-        <= FLEXIBILITY_CONSTANT_TAU + 2 * INTERACTION_DISTANCE_EPSILON
+        L_feature_min_max.min_dist - (2 * INTERACTION_DISTANCE_EPSILON)
+        <= R_features_distance
+        <= L_feature_min_max.max_dist + (2 * INTERACTION_DISTANCE_EPSILON)
     )
 
 
@@ -135,11 +132,8 @@ def find_possible_edges(
     for interaction_nodes in [
         edge_interactions,
         edge_interactions_reversed,
-    ]:  # Test the edge in one configuration, then if the pairs are reversed
-        if features_are_attracted(*interaction_nodes[0]) and features_are_attracted(
-            *interaction_nodes[1],
-        ):
-            possible_edges.append(interaction_nodes)
+    ]:
+        possible_edges.append(interaction_nodes)
 
     return possible_edges
 
@@ -172,26 +166,24 @@ def build_nx_weighted_graph(
 
 
 def build_binding_interaction_graph(
-    L_distance_matrix: OrderedTupleDict[float],
+    L_distance_matrix: OrderedTupleDict[MinMaxDistance],
     R_distance_matrix: OrderedTupleDict[float],
 ) -> nx.Graph:
     """Given the distance matrixes for two molecules and their families,
        build a full binding interaction graph.
 
     Args:
-        L_distance_matrix (OrderedTupleDict[float]): Ligand's distance matrix.
+        L_distance_matrix (OrderedTupleDict[MinMaxDistance]): Ligand's distance matrix.
         R_distance_matrix (OrderedTupleDict[float]): Receptor's distance matrix.
 
     Returns:
         nx.Graph: Full binding graph object.
     """
-    possible_edges: list[tuple[tuple[Feature, Feature], tuple[Feature, Feature]]] = (
-        []
-    )  # list[((Feature_L_a, Feature_R_x), (Feature_L_b, Feature_R_y))]
+    possible_edges: list[tuple[tuple[Feature, Feature], tuple[Feature, Feature]]] = []
 
-    for L_pair, L_distance in L_distance_matrix.items():
+    for L_pair, L_min_max in L_distance_matrix.items():
         for R_pair, R_distance in R_distance_matrix.items():
-            if not pairs_distances_match(L_distance, R_distance):
+            if not pairs_distances_match(L_min_max, R_distance):
                 continue
 
             possible_edges += find_possible_edges(L_pair, R_pair)  # type: ignore
@@ -225,7 +217,7 @@ def build_binding_interaction_graph(
 def build_weighted_binding_interaction_graph(
     L_features,
     R_features,
-    L_distance_matrix: OrderedTupleDict[float],
+    L_distance_matrix: OrderedTupleDict[MinMaxDistance],
     R_distance_matrix: OrderedTupleDict[float],
 ) -> nx.Graph:
 
@@ -242,17 +234,17 @@ def build_weighted_binding_interaction_graph(
     ]
 
     edges: set[tuple[InteractionNode, InteractionNode]] = set()
+    temp: set[tuple[InteractionNode, InteractionNode]] = set()
 
     for i, node_a in enumerate(nodes):
         for node_b in nodes[i + 1 :]:
 
-            L_distance = L_distance_matrix[node_a.L_feature, node_b.L_feature]
+            L_min_max = L_distance_matrix[node_a.L_feature, node_b.L_feature]
             R_distance = R_distance_matrix[node_a.R_feature, node_b.R_feature]
 
-
-            if pairs_distances_match(L_distance, R_distance):
+            if pairs_distances_match(L_min_max, R_distance):
                 edges.add((node_a, node_b))
-
+            temp.add((node_a, node_b))
     return build_nx_weighted_graph(edges, nodes)
 
 

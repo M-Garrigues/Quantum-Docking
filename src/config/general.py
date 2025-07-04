@@ -2,10 +2,9 @@
 
 from typing import Final
 
-""" Interactions configuration """
-FLEXIBILITY_CONSTANT_TAU: Final[float] = 0
-INTERACTION_DISTANCE_EPSILON: Final[float] = 2
-print("taplcq")
+# Interactions configuration
+
+INTERACTION_DISTANCE_EPSILON: Final[float] = 1
 
 
 SELECTED_FEATURES: Final[dict] = {
