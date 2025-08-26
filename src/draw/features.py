@@ -1,21 +1,15 @@
 import copy
+from collections.abc import Sequence
 
 import matplotlib.pyplot as plt
+import numpy as np
+import py3Dmol
+from rdkit import Chem
 
 from src.graph.interaction_graph import InteractionNode
 from src.graph.mapping import results_to_interaction_graph_cliques
 from src.mol_processing.features import Feature
 from src.utils.dataclasses import OrderedTupleDict
-
-from rdkit import Chem
-from rdkit.Chem import AllChem, ChemicalFeatures
-from rdkit.Chem.ChemicalFeatures import MolChemicalFeature
-from rdkit import RDConfig
-import numpy as np
-import os
-from enum import Enum
-import py3Dmol
-from typing import Sequence
 
 
 def show_molecule_with_features(molecule: Chem.Mol, features: list[Feature]) -> py3Dmol.view:
@@ -38,7 +32,7 @@ def show_molecule_with_features(molecule: Chem.Mol, features: list[Feature]) -> 
                 "radius": 0.5,
                 "color": color,
                 "alpha": 0.8,
-            }
+            },
         )
         view.addLabel(
             feature.name,
@@ -89,21 +83,18 @@ def visualize_docking_site(
     distances = np.linalg.norm(r_coords - l_center, axis=1)
     close_serials = [i + 1 for i, d in enumerate(distances) if d <= 20.0]
 
-    # Convert to PDB blocks
-    receptor_block = AllChem.MolToPDBBlock(receptor)
-    ligand_block = AllChem.MolToPDBBlock(ligand)
-
     # Initialize viewer
-    viewer = py3Dmol.view(width=800, height=600)
-    viewer.addModel(receptor_block, "pdb")
-    # Apply base style: transparent cartoon
-    viewer.setStyle({"model": 0}, {"cartoon": {"color": "grey", "opacity": 0.2}})
-    # Highlight close atoms with full opacity
-    viewer.setStyle({"model": 0, "serial": close_serials}, {"cartoon": {"opacity": 1.0}})
+    viewer = py3Dmol.view(width=1400, height=1000)
 
-    # Add ligand model
-    viewer.addModel(ligand_block, "pdb")
-    viewer.setStyle({"model": 1}, {"stick": {"radius": 0.2}})
+    receptor_pdb = Chem.MolToPDBBlock(receptor)
+    ligand_pdb = Chem.MolToPDBBlock(ligand)
+
+    viewer.addModel(receptor_pdb, "pdb")  # Model 0
+    viewer.addModel(ligand_pdb, "pdb")  # Model 1
+
+    # Apply styles to each model by its index
+    viewer.setStyle({"model": 0}, {"cartoon": {"color": "lightgray", "opacity": 0.6}})
+    viewer.setStyle({"model": 1}, {"stick": {"colorscheme": "magentaCarbon"}})
 
     # Add feature spheres
     def add_spheres(features, model_idx):
@@ -116,7 +107,16 @@ def visualize_docking_site(
                     "color": feat.family.color,
                     "alpha": 0.8,
                     "model": model_idx,
-                }
+                },
+            )
+            viewer.addLabel(
+                feat.name,
+                {
+                    "position": {"x": x, "y": y, "z": z},
+                    "fontColor": feat.family.color,
+                    "backgroundOpacity": 0.2,
+                    "backgroundColor": "white",
+                },
             )
 
     add_spheres(receptor_features, 0)
@@ -258,9 +258,9 @@ def draw_multiple_dockings(
 
 
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D, proj3d
 import numpy as np
 from matplotlib.lines import Line2D
+from mpl_toolkits.mplot3d import proj3d
 
 
 class Interactive3DPlotter:
@@ -405,11 +405,11 @@ class Interactive3DPlotter:
 
         if contacted_receptor_point_objects:
             self.contacted_rec_coords_3d = np.array(
-                [p.position for p in contacted_receptor_point_objects]
+                [p.position for p in contacted_receptor_point_objects],
             )
             if self.contacted_rec_coords_3d.shape[0] > 0:
                 initial_contact_point_sizes = self._calculate_initial_sizes(
-                    self.contacted_rec_coords_3d
+                    self.contacted_rec_coords_3d,
                 )  # Temporary
                 initial_ring_sizes = [
                     max(self.S_MAX_SIZE * 1.5, s_pt * 2.0) for s_pt in initial_contact_point_sizes
@@ -443,13 +443,17 @@ class Interactive3DPlotter:
             and "-" in c
             and {p.name: p for p in self.ligand_points_data}.get(c.split("-", 1)[0])
             and {p.name: p for p in self.receptor_points_data}.get(
-                c.split("-", 1)[1] if len(c.split("-", 1)) > 1 else None
+                c.split("-", 1)[1] if len(c.split("-", 1)) > 1 else None,
             )
             for c in self.contact_list
         )
         if has_contacts and "Contact Line" not in by_label:
             by_label["Contact Line"] = Line2D(
-                [0], [0], linestyle="--", color="green", linewidth=1.5
+                [0],
+                [0],
+                linestyle="--",
+                color="green",
+                linewidth=1.5,
             )
         if (
             self.contacted_rec_coords_3d is not None
@@ -546,7 +550,7 @@ class Interactive3DPlotter:
 
             if self.contact_circles_scatter_artist and self.contacted_rec_coords_3d is not None:
                 underlying_point_dynamic_sizes = self._get_dynamic_sizes_for_view(
-                    self.contacted_rec_coords_3d
+                    self.contacted_rec_coords_3d,
                 )
                 if underlying_point_dynamic_sizes.size > 0:
                     new_ring_sizes = [

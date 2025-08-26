@@ -1,4 +1,7 @@
+"""Script used to visualise pharmacophore points in PyMol"""
+
 import json
+
 from pymol import cmd
 
 
@@ -36,7 +39,7 @@ def load_pharmacophores_from_file(
 
     # Load pharmacophores from JSON file
     def load_pharmacophores(file_path, group_name, is_ligand=True):
-        with open(file_path, "r") as f:
+        with open(file_path) as f:
             data = json.load(f)
         features = data["feature_coords"]
         points = {}
@@ -117,7 +120,8 @@ def load_pharmacophores_from_file(
         for r_name, r_coords, r_type in linked_receptor_points:
             # Ensure that only specific pairs and group differences are connected
             if (l_type, r_type) in {("D", "a"), ("A", "d"), ("H", "h"), ("R", "r")} and distance(
-                l_coords, r_coords
+                l_coords,
+                r_coords,
             ) <= 4:
                 # Create dashed connection between ligand and receptor points
                 cmd.distance(f"connection_{l_name}_{r_name}", l_name, r_name)

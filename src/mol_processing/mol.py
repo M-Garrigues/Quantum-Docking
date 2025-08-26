@@ -1,5 +1,6 @@
 """Module to deal with the Rdkit molecules and their features."""
 
+import copy
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import cast
@@ -83,7 +84,7 @@ def get_protein_from_pdb_file(pdb_path: str) -> Mol:
     Returns:
         An RDKit Mol object of the protein.
     """
-    with open(pdb_path, "r") as f:
+    with open(pdb_path) as f:
         # Read all lines and filter for those starting with 'ATOM'
         protein_lines = [line for line in f if line.startswith("ATOM")]
 
@@ -100,7 +101,9 @@ def get_protein_from_pdb_file(pdb_path: str) -> Mol:
 
 
 def generate_aligned_conformers(
-    molecule: Chem.Mol, num_confs: int = 100, core_smarts: str = "c1ccccc1"
+    molecule: Chem.Mol,
+    num_confs: int = 100,
+    core_smarts: str = "c1ccccc1",
 ) -> Chem.Mol:
     """
     Generates multiple conformers for a molecule and aligns them to a common core.
@@ -115,11 +118,12 @@ def generate_aligned_conformers(
         The same molecule object, now containing the generated and aligned conformers.
         The operation is done in-place.
     """
+    copied_mol = copy.deepcopy(molecule)
     # Generate the conformers
-    AllChem.EmbedMultipleConfs(molecule, numConfs=num_confs, randomSeed=42)
+    AllChem.EmbedMultipleConfs(copied_mol, numConfs=num_confs, randomSeed=42)
 
     # Optimize their geometry
-    AllChem.MMFFOptimizeMoleculeConfs(molecule)
+    AllChem.MMFFOptimizeMoleculeConfs(copied_mol)
 
     # Find the atom indices of the core structure
     core_pattern = Chem.MolFromSmarts(core_smarts)
@@ -127,14 +131,14 @@ def generate_aligned_conformers(
 
     # Align all conformers to the core of the first conformer
     if core_match:
-        AllChem.AlignMolConformers(molecule, atomIds=core_match)
+        AllChem.AlignMolConformers(copied_mol, atomIds=core_match)
         print(
-            f"Generated and aligned {molecule.GetNumConformers()} conformers on the specified core."
+            f"Generated and aligned {copied_mol.GetNumConformers()} conformers on the specified core.",
         )
     else:
         print(f"Warning: Core pattern '{core_smarts}' not found. Conformers were not aligned.")
 
-    return molecule
+    return copied_mol
 
 
 def get_features(mol: Mol, mol_id: str) -> list[Feature]:

@@ -1,7 +1,7 @@
 """Module containing all the functions needed to build a binding interaction graph."""
 
-from dataclasses import dataclass
 import itertools
+from dataclasses import dataclass
 
 import networkx as nx
 
@@ -50,7 +50,9 @@ def build_distance_matrix(
 
 
 def filter_receptor_features_close_to_ligand(
-    L_features: list[Feature], R_features: list[Feature], max_distance: float = 4
+    L_features: list[Feature],
+    R_features: list[Feature],
+    max_distance: float = 4,
 ) -> tuple[list[Feature], list[Feature]]:
     selected_L_features = set()
     selected_R_features = set()
@@ -68,7 +70,11 @@ def filter_receptor_features_close_to_ligand(
     return list(selected_L_features), list(selected_R_features)
 
 
-def pairs_distances_match(L_feature_min_max: MinMaxDistance, R_features_distance: float) -> bool:
+def pairs_distances_match(
+    L_feature_min_max: MinMaxDistance,
+    R_features_distance: float,
+    interaction_distance: float,
+) -> bool:
     """Determines whether two features pairs in different molecules can simultaneously interact with
         each other, based on distance between features, the variation of distance due to the ligand's
         flexibility and the Epsilon interaction distance parameter.
@@ -81,9 +87,9 @@ def pairs_distances_match(L_feature_min_max: MinMaxDistance, R_features_distance
         bool: Wether the pairs can interact.
     """
     return (
-        L_feature_min_max.min_dist - (2 * INTERACTION_DISTANCE_EPSILON)
+        L_feature_min_max.min_dist - (2 * interaction_distance)
         <= R_features_distance
-        <= L_feature_min_max.max_dist + (2 * INTERACTION_DISTANCE_EPSILON)
+        <= L_feature_min_max.max_dist + (2 * interaction_distance)
     )
 
 
@@ -219,7 +225,11 @@ def build_weighted_binding_interaction_graph(
     R_features,
     L_distance_matrix: OrderedTupleDict[MinMaxDistance],
     R_distance_matrix: OrderedTupleDict[float],
+    interaction_distance: float | None = None,
 ) -> nx.Graph:
+
+    if interaction_distance is None:
+        interaction_distance = INTERACTION_DISTANCE_EPSILON
 
     nodes = [
         InteractionNode(
@@ -242,7 +252,7 @@ def build_weighted_binding_interaction_graph(
             L_min_max = L_distance_matrix[node_a.L_feature, node_b.L_feature]
             R_distance = R_distance_matrix[node_a.R_feature, node_b.R_feature]
 
-            if pairs_distances_match(L_min_max, R_distance):
+            if pairs_distances_match(L_min_max, R_distance, interaction_distance):
                 edges.add((node_a, node_b))
             temp.add((node_a, node_b))
     return build_nx_weighted_graph(edges, nodes)

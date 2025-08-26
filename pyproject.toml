@@ -1,7 +1,7 @@
 [project]
 name = "quantum-docking"
 version = "0.0.1"
-authors = [{ name="Noé Bosc-Haddad", email="noe.bosc.haddad@gmail.com"}, {name="Mathieu Garrigues", email="mathieu.garigues@gmail.com"}, {name="Victor Onofre", email="vonofre68@gmail.com"},]
+authors = [{name="Mathieu Garrigues", email="mathieu.garrigues@pasqal.com"}, {name="Victor Onofre", email="victor.onofre@pasqal.com"},]
 description = "As part of the Blaise Pascal's [Re]Generative Quantum Challenge, we attempt to use neutral atoms to speed up molecular docking."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -45,7 +45,7 @@ jupyter = "^1.0.0"
 networkx = "2.8.8"
 scipy = "<1.13"
 pulser = "^0.19.0"
-rdkit = "2023.09.2"
+rdkit = "^2025.3.3"
 pmapper = "^1.1.1"
 lxml = "^5.3.0"
 ipympl = "^0.9.7"
@@ -54,6 +54,7 @@ mordred = "^1.2.0"
 tk = "^0.1.0"
 pyvista = "^0.45.2"
 biopython = "^1.85"
+seaborn = "^0.13.2"
 
 
 [build-system]

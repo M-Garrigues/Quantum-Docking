@@ -1,6 +1,7 @@
 from itertools import combinations
-import networkx as nx
 from typing import Any
+
+import networkx as nx
 
 
 def find_max_clique(G: nx.Graph) -> list:
@@ -58,7 +59,9 @@ def greedy_max_weight_clique(
 
     # Sort nodes by weight descending
     sorted_nodes = sorted(
-        graph.nodes, key=lambda n: graph.nodes[n].get(weight_attr, 0), reverse=True
+        graph.nodes,
+        key=lambda n: graph.nodes[n].get(weight_attr, 0),
+        reverse=True,
     )
 
     for start in sorted_nodes:
@@ -84,11 +87,11 @@ def greedy_max_weight_clique(
 
     return best_clique
 
+
 import networkx as nx
-from typing import Optional, Tuple, List, Set
 
 
-def find_exhaustive_weighted_max_clique(graph: nx.Graph) -> Tuple[Optional[List[str]], float]:
+def find_exhaustive_weighted_max_clique(graph: nx.Graph) -> tuple[list[str] | None, float]:
     """
     Finds the maximum weight clique in a networkx graph using an exhaustive
     backtracking search (Bron-Kerbosch with pivoting and weighting).
@@ -109,7 +112,9 @@ def find_exhaustive_weighted_max_clique(graph: nx.Graph) -> Tuple[Optional[List[
 
     # --- The core recursive backtracking function ---
     def find_cliques_recursive(
-        current_clique: List[str], candidates: Set[str], excluded: Set[str]
+        current_clique: list[str],
+        candidates: set[str],
+        excluded: set[str],
     ):
         """
         Recursively finds maximal cliques and updates the best solution found.

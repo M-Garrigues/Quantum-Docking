@@ -1,9 +1,10 @@
 # --- Start of the function ---
 
 import os
+
 import numpy as np
-from rdkit import Chem
 import py3Dmol
+from rdkit import Chem
 
 from src.mol_processing.features import Feature, MinMaxDistance
 
@@ -35,7 +36,7 @@ def show_3d(
     for mol in molecules:
         if mol.GetNumConformers() == 0:
             print(
-                f"Warning: Molecule {Chem.MolToSmiles(mol)} has no 3D conformer and will be skipped."
+                f"Warning: Molecule {Chem.MolToSmiles(mol)} has no 3D conformer and will be skipped.",
             )
             continue
 
@@ -50,7 +51,7 @@ def show_3d(
 
 def visualize_flexibility_ensemble(molecule: Chem.Mol, num_to_display: int = 15):
     """Creates a visualisation of different conformers for a molecule, centered around"""
-    view = py3Dmol.view(width=800, height=600)
+    view = py3Dmol.view(width=1400, height=1000)
     total_confs = molecule.GetNumConformers()
     if total_confs == 0:
         return None
@@ -64,7 +65,7 @@ def visualize_flexibility_ensemble(molecule: Chem.Mol, num_to_display: int = 15)
         writer.write(molecule, confId=conf_id)
     writer.close()
 
-    with open("temp_conformers.sdf", "r") as f:
+    with open("temp_conformers.sdf") as f:
         sdf_block = f.read()
     os.remove("temp_conformers.sdf")
 
@@ -77,7 +78,8 @@ def visualize_flexibility_ensemble(molecule: Chem.Mol, num_to_display: int = 15)
 
 
 def visualize_min_max_distance_pair(
-    molecule: Chem.Mol, distance_data: dict[tuple[Feature, Feature], MinMaxDistance]
+    molecule: Chem.Mol,
+    distance_data: dict[tuple[Feature, Feature], MinMaxDistance],
 ) -> py3Dmol.view:
     """
     Finds the feature pair with the largest distance variation and displays
@@ -101,7 +103,7 @@ def visualize_min_max_distance_pair(
     print(f"  Max distance: {dist_info.max_dist:.2f} Å (Conformer ID: {dist_info.max_conf_id})")
 
     # Create a 1x2 grid for the side-by-side view
-    view = py3Dmol.view(width=800, height=400, linked=False, viewergrid=(1, 2))
+    view = py3Dmol.view(width=1400, height=700, linked=False, viewergrid=(1, 2))
 
     # --- LEFT PANE: Minimum Distance Conformer ---
     min_conf = molecule.GetConformer(dist_info.min_conf_id)

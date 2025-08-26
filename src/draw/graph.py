@@ -1,10 +1,11 @@
 """Module for plotting the graphs."""
 
 import math
-from typing import Mapping, Any
+from collections.abc import Mapping
+from typing import Any
+
 import matplotlib.pyplot as plt
 import networkx as nx
-
 import numpy as np
 from matplotlib.figure import Figure
 

@@ -1,4 +1,5 @@
 """Module containing the VQAA solver."""
+
 from itertools import islice
 
 import matplotlib.pyplot as plt

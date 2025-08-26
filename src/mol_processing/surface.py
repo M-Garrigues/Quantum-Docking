@@ -6,7 +6,7 @@ located on the surface of a molecule.
 from __future__ import annotations
 
 import io
-from typing import List, Sequence, Optional, Tuple
+from collections.abc import Sequence
 
 import numpy as np
 import py3Dmol
@@ -15,17 +15,19 @@ from Bio.PDB.SASA import ShrakeRupley
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from scipy.spatial import cKDTree
+
+from src.draw import mol
 from src.mol_processing.features import Feature
 
 
 def select_surface_features(
     mol: Chem.Mol,
     features: Sequence[Feature],
-    ligand: Optional[Chem.Mol] = None,
+    ligand: Chem.Mol | None = None,
     default_probe_radius: float = 1.4,
     min_sasa_threshold: float = 0.1,
     distance_threshold: float = 3.0,
-) -> List[Feature]:
+) -> list[Feature]:
     """
     Filters a sequence of features, returning only those near the molecule's surface.
     This function uses Biopython in the backend for robust SASA calculation.
@@ -83,7 +85,7 @@ def select_surface_features(
 
     # 5. Build a k-d tree for efficient distance lookup and filter the features.
     surface_tree = cKDTree(np.array(surface_atom_coords))
-    surface_features: List[Feature] = []
+    surface_features: list[Feature] = []
     for feat in features:
         distance, _ = surface_tree.query(feat.position, k=1, workers=-1)
         if distance <= distance_threshold:
@@ -92,16 +94,11 @@ def select_surface_features(
     return surface_features
 
 
-import py3Dmol
-from rdkit import Chem
-from typing import List, Tuple, Optional
-
-
 def visualize_selection(
     molecule: Chem.Mol,
-    all_points: List[Feature],
-    selected_points: List[Feature],
-    ligand: Optional[Chem.Mol] = None,
+    all_points: list[Feature],
+    selected_points: list[Feature],
+    ligand: Chem.Mol | None = None,
 ) -> py3Dmol.view:
     """
     Visualizes the molecule, pharmacophore points, and an optional ligand.
@@ -118,12 +115,24 @@ def visualize_selection(
     Returns:
         A py3Dmol.view instance containing the visualization.
     """
-    selected_positions: set[Tuple[float, float, float]] = {
+    selected_positions: set[tuple[float, float, float]] = {
         tuple(p.position) for p in selected_points
     }
 
-    view = py3Dmol.view(width=1200, height=900)
-    view.setBackgroundColor("white")
+    view = py3Dmol.view(width=1400, height=1000)
+
+    # Convert each molecule to a PDB-formatted text block
+    receptor_pdb = Chem.MolToPDBBlock(molecule)
+    ligand_pdb = Chem.MolToPDBBlock(ligand)
+
+    # Add models, specifying the 'pdb' format
+    view.addModel(receptor_pdb, "pdb")  # Model 0
+    view.addModel(ligand_pdb, "pdb")  # Model 1
+
+    # Apply styles to each model by its index
+    view.setStyle({"model": 0}, {"cartoon": {"color": "lightgray", "opacity": 0.6}})
+    view.setStyle({"model": 1}, {"stick": {"colorscheme": "magentaCarbon"}})
+    view.zoomTo({"model": 1})
 
     for p in all_points:
         pos = tuple(p.position)
@@ -136,24 +145,7 @@ def visualize_selection(
                 "radius": radius,
                 "color": color,
                 "alpha": 0.8,
-            }
+            },
         )
-
-    if ligand is not None:
-        receptor_block = Chem.MolToMolBlock(molecule)
-        view.addModel(receptor_block, "mol")
-        # view.setStyle({"model": 0}, {"cartoon": {"color": "lightgrey", "opacity": 0.6}})
-
-        ligand_block = Chem.MolToMolBlock(ligand)
-        view.addModel(ligand_block, "mol")
-        view.setStyle({"model": 1}, {"stick": {}})
-
-        view.zoomTo({"model": 1})
-
-    else:
-        mol_block = Chem.MolToMolBlock(molecule)
-        view.addModel(mol_block, "mol")
-        view.setStyle({}, {"stick": {}, "sphere": {"scale": 0.2}})
-        view.zoomTo()
 
     return view

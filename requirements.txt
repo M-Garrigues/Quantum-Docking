@@ -3,9 +3,9 @@ hyperopt
 matplotlib<3.8
 networkx
 numpy
+pmapper
 pulser
 pytorch
 ray
 rdkit
 scipy<1.13.0
-pmapper

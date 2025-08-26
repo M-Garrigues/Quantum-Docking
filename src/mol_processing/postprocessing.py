@@ -1,14 +1,15 @@
-from os import rmdir
+import numpy as np
 from rdkit import Chem
 from rdkit.Chem import AllChem
-import numpy as np
 from scipy.spatial.transform import Rotation
 
 from src.mol_processing.features import Feature, extract_pharmacophores
 
 
 def place_ligand_from_contacts(
-    ligand_with_confs: Chem.Mol, receptor_features: list[Feature], contacts: list[tuple[str, str]]
+    ligand_with_confs: Chem.Mol,
+    receptor_features: list[Feature],
+    contacts: list[tuple[str, str]],
 ) -> Chem.Mol | None:
     """
     Finds the best conformation and 3D placement for a ligand that satisfies
@@ -80,7 +81,7 @@ def place_ligand_from_contacts(
         return None
 
     print(
-        f"Best solution: RMSD = {best_solution['rmsd']:.3f} Å for conformer {best_solution['conformer_id']}"
+        f"Best solution: RMSD = {best_solution['rmsd']:.3f} Å for conformer {best_solution['conformer_id']}",
     )
 
     best_conformer = ligand_with_confs.GetConformer(best_solution["conformer_id"])

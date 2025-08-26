@@ -1,20 +1,19 @@
 """Module to handle the features, with dedicated objects."""
 
-from collections import Counter
-from dataclasses import dataclass
+import itertools
 import json
 import os
-from rdkit.Chem.rdMolChemicalFeatures import MolChemicalFeature
-from rdkit import Chem
+from collections import Counter
+from dataclasses import dataclass
+
+import numpy as np
+from rdkit import Chem, RDConfig
 from rdkit.Chem import ChemicalFeatures
 from rdkit.Chem.ChemicalFeatures import MolChemicalFeature
-from rdkit import RDConfig
-from rdkit.Chem import AllChem
-import itertools
-from src.config.general import SELECTED_FEATURES
-import numpy as np
+from rdkit.Chem.rdMolChemicalFeatures import MolChemicalFeature
 
-from src.utils.dataclasses import OrderedTupleDict, TwoWayTuple
+from src.config.general import SELECTED_FEATURES
+from src.utils.dataclasses import OrderedTupleDict
 
 
 @dataclass(init=True)
@@ -102,7 +101,9 @@ class MinMaxDistance:
 
 
 def extract_pharmacophores(
-    molecule: Chem.Mol, molecule_id: str, confId: int = -1
+    molecule: Chem.Mol,
+    molecule_id: str,
+    confId: int = -1,
 ) -> list[Feature]:
     """
     Extracts pharmacophore points, ignoring any family not defined
@@ -167,7 +168,7 @@ def find_feature_by_name(name: str, features_list: list[Feature]) -> Feature | N
 
 def load_features_from_pma_file(path: str, reversed=True) -> list[Feature]:
 
-    with open(path, "r") as f:
+    with open(path) as f:
         points_dict = json.loads(f.read())
 
     points = points_dict["feature_coords"]
@@ -175,7 +176,9 @@ def load_features_from_pma_file(path: str, reversed=True) -> list[Feature]:
 
     points = [
         Feature(
-            FeatureFamily.from_family_name(FAMILY_NAMES_CONVERSION[point[0]]), point[1], "test"
+            FeatureFamily.from_family_name(FAMILY_NAMES_CONVERSION[point[0]]),
+            point[1],
+            "test",
         )
         for point in points
     ]
@@ -219,7 +222,8 @@ def spatial_selection(features_list: list[Feature], coordinates: list[tuple]) ->
 
 
 def find_pharmacophore_distances(
-    molecule: Chem.Mol, features: list[Feature]
+    molecule: Chem.Mol,
+    features: list[Feature],
 ) -> OrderedTupleDict[MinMaxDistance]:
     """
     Calculates the min/max distances between pre-extracted pharmacophore points
@@ -235,6 +239,7 @@ def find_pharmacophore_distances(
     # Initialize the results dictionary with MinMaxDistance objects
     distance_results = OrderedTupleDict()
     for pair in itertools.combinations_with_replacement(features, 2):
+        print(pair)
         distance_results[pair[0], pair[1]] = MinMaxDistance()
 
     for conf_id in range(num_total_confs):

@@ -1,5 +1,8 @@
 from __future__ import annotations
-from typing import Any, Dict, Hashable, Set, Tuple
+
+from collections.abc import Hashable
+from typing import Any
+
 import networkx as nx
 
 
@@ -19,10 +22,10 @@ class WeightedMIS:
         """
         self._graph: nx.Graph = graph
         self._weight_attr: str = weight
-        self._best_set: Set[Hashable] = set()
+        self._best_set: set[Hashable] = set()
         self._best_weight: float = 0.0
 
-    def solve(self) -> Tuple[Set[Hashable], float]:
+    def solve(self) -> tuple[set[Hashable], float]:
         """
         Computes the exact weighted MIS.
 
@@ -31,7 +34,7 @@ class WeightedMIS:
         """
         nodes = list(self._graph.nodes)
         # Precompute weights
-        weights: Dict[Hashable, float] = {
+        weights: dict[Hashable, float] = {
             n: float(self._graph.nodes[n].get(self._weight_attr, 1.0)) for n in nodes
         }
         # Sort nodes for branch ordering (largest weight first)
@@ -40,7 +43,10 @@ class WeightedMIS:
         return self._best_set, self._best_weight
 
     def _branch_and_bound(
-        self, current_set: Set[Hashable], candidates: Set[Hashable], weights: Dict[Hashable, float]
+        self,
+        current_set: set[Hashable],
+        candidates: set[Hashable],
+        weights: dict[Hashable, float],
     ) -> None:
         """
         Recursive branch-and-bound search.
@@ -77,7 +83,7 @@ class WeightedMIS:
         self._branch_and_bound(current_set, candidates, weights)
 
 
-def solve_weighted_mis(graph: nx.Graph, weight: str = "weight") -> Tuple[Set[Any], float]:
+def solve_weighted_mis(graph: nx.Graph, weight: str = "weight") -> tuple[set[Any], float]:
     """
     Convenience function to compute the exact weighted Maximum Independent Set.
 
